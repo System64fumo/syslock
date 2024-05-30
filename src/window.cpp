@@ -11,7 +11,7 @@ syslock::syslock() {
 	// TODO: Add a way to disable this for debugging/customization
 	if (true) {
 		gtk_layer_init_for_window(gobj());
-		gtk_layer_set_keyboard_mode(gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+		gtk_layer_set_keyboard_mode(gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
 		gtk_layer_set_namespace(gobj(), "syslock");
 		gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
 
@@ -58,6 +58,7 @@ syslock::syslock() {
 	entry_password.set_halign(Gtk::Align::CENTER);
 	entry_password.set_visibility(false);
 	entry_password.signal_activate().connect(sigc::mem_fun(*this, &syslock::on_entry));
+	entry_password.grab_focus();
 
 	// Load custom css
 	std::string css_path = home_dir + "/.config/sys64/lock.css";
