@@ -22,17 +22,19 @@ syslock::syslock() {
 	box_layout.set_valign(Gtk::Align::CENTER);
 
 	std::string home_dir = getenv("HOME");
-	std::string profile_picture = home_dir + "/.face";
-
-	if (std::filesystem::exists(profile_picture)) {
-		box_layout.append(image_profile);
-		auto pixbuf = Gdk::Pixbuf::create_from_file(profile_picture);
-		pixbuf = pixbuf->scale_simple(profile_scale, profile_scale, Gdk::InterpType::BILINEAR);
-		// TODO: Add a way to enable/disable rounding the profile picture
-		pixbuf = create_circular_pixbuf(pixbuf);
-		image_profile.set_size_request(profile_scale, profile_scale);
-		image_profile.set(pixbuf);
-		image_profile.set_halign(Gtk::Align::CENTER);
+	if (profile_scale > 0) {
+		std::string profile_picture = home_dir + "/.face";
+	
+		if (std::filesystem::exists(profile_picture)) {
+			box_layout.append(image_profile);
+			auto pixbuf = Gdk::Pixbuf::create_from_file(profile_picture);
+			pixbuf = pixbuf->scale_simple(profile_scale, profile_scale, Gdk::InterpType::BILINEAR);
+			// TODO: Add a way to enable/disable rounding the profile picture
+			pixbuf = create_circular_pixbuf(pixbuf, profile_scale);
+			image_profile.set_size_request(profile_scale, profile_scale);
+			image_profile.set(pixbuf);
+			image_profile.set_halign(Gtk::Align::CENTER);
+		}
 	}
 
 	box_layout.append(label_username);
