@@ -14,5 +14,6 @@ class syslock : public Gtk::Window {
 		Gtk::Entry entry_password;
 
 		void on_entry();
+		void show_windows();
 };
 

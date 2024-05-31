@@ -8,31 +8,17 @@
 #include <pwd.h>
 
 syslock::syslock() {
-	// TODO: Add a way to disable this for debugging/customization
-	if (true) {
-		gtk_layer_init_for_window(gobj());
-		gtk_layer_set_keyboard_mode(gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
-		gtk_layer_set_namespace(gobj(), "syslock");
-		gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
-
-		gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
-		gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
-		gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
-		gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
-	}
-
 	// Initialize
 	set_default_size(640, 480);
 	set_hide_on_close(true);
+	show_windows();
 	show();
-	// TODO: Add multimonitor support
 
 	// TODO: Clean this whole mess up
 	// And add a way to enable/disable specific features (PFP, Username, Ect)
 	set_child(box_layout);
 	box_layout.property_orientation().set_value(Gtk::Orientation::VERTICAL);
 	box_layout.set_valign(Gtk::Align::CENTER);
-
 
 	std::string home_dir = getenv("HOME");
 	std::string profile_picture = home_dir + "/.face";
@@ -85,5 +71,57 @@ void syslock::on_entry() {
 		// TODO: Display how many times the user can retry the password
 		std::cerr << "Authentication failed" << std::endl;
 		entry_password.set_text("");
+	}
+}
+
+void syslock::show_windows() {
+	int main_monitor = 0;
+	GdkDisplay *display = gdk_display_get_default();
+	GListModel *monitors = gdk_display_get_monitors(display);
+
+	int monitorCount = g_list_model_get_n_items(monitors);
+
+	if (main_monitor >= monitorCount)
+		main_monitor = monitorCount - 1;
+
+	// TODO: Add a way to disable this for debugging/customization
+	// Set up layer shell
+	if (true) {
+		gtk_layer_init_for_window(gobj());
+		gtk_layer_set_keyboard_mode(gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
+		gtk_layer_set_namespace(gobj(), "syslock");
+		gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
+	
+		gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
+		gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
+		gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
+		gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
+		gtk_layer_set_monitor (gobj(), GDK_MONITOR(g_list_model_get_item(monitors, main_monitor)));
+	}
+
+	// TODO: (VERY CRITICAL!!!)
+	// Add a way to detect when a monitor is connected/disconnected
+	for (int i = 0; i < monitorCount; ++i) {
+		// Ignore primary monitor
+		if (i == main_monitor)
+			continue;
+
+		GdkMonitor *monitor = GDK_MONITOR(g_list_model_get_item(monitors, i));
+
+		// Create empty windows
+		Gtk::Window *window = new Gtk::Window();
+		app->add_window(*window);
+
+		// Layer shell stuff
+		gtk_layer_init_for_window(window->gobj());
+		gtk_layer_set_namespace(window->gobj(), "syslock-empty-window");
+		gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_TOP);
+		gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
+		gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
+		gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
+		gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
+		gtk_layer_set_monitor(window->gobj(), monitor);
+
+		window->show();
 	}
 }
