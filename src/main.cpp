@@ -1,5 +1,9 @@
 #include "main.hpp"
 #include "window.hpp"
+#include "config.hpp"
+
+#include <iostream>
+#include <getopt.h>
 
 // TODO: Move this to a different file
 Glib::RefPtr<Gdk::Pixbuf> create_circular_pixbuf(const Glib::RefPtr<Gdk::Pixbuf>& src_pixbuf) {
@@ -26,8 +30,36 @@ Glib::RefPtr<Gdk::Pixbuf> create_circular_pixbuf(const Glib::RefPtr<Gdk::Pixbuf>
 }
 
 int main(int argc, char* argv[]) {
-	// TODO: Add config system
 	// TODO: Add session lock protocol
+
+	// Read launch arguments
+	while (true) {
+		switch(getopt(argc, argv, "m:ddh")) {
+			case 'm':
+				main_monitor = std::stoi(optarg);
+				continue;
+
+			case 'd':
+				debug = true;
+				continue;
+
+			case 'h':
+			default :
+				std::cout << "usage:" << std::endl;
+				std::cout << "  syslock [argument...]:\n" << std::endl;
+				std::cout << "arguments:" << std::endl;
+				std::cout << "  -m	Set primary monitor" << std::endl;
+				std::cout << "  -d	Enable debug mode" << std::endl;
+				std::cout << "  -h	Show this help message" << std::endl;
+				return 0;
+
+			case -1:
+				break;
+			}
+
+			break;
+	}
+
 	app = Gtk::Application::create("funky.sys64.syslock");
 	app->hold();
 	win = new syslock();
