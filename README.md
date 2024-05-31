@@ -15,4 +15,5 @@ arguments:
   -p	Set profile picture size
   -m	Set primary monitor
   -d	Enable debug mode
+  -v	Prints version info
 ```

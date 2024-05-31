@@ -1,6 +1,7 @@
 #include "main.hpp"
 #include "window.hpp"
 #include "config.hpp"
+#include "git_info.hpp"
 
 #include <iostream>
 #include <getopt.h>
@@ -10,7 +11,7 @@ int main(int argc, char* argv[]) {
 
 	// Read launch arguments
 	while (true) {
-		switch(getopt(argc, argv, "p:dm:ddh")) {
+		switch(getopt(argc, argv, "p:dm:ddvh")) {
 			case 'p':
 				profile_scale = std::stoi(optarg);
 				continue;
@@ -23,6 +24,11 @@ int main(int argc, char* argv[]) {
 				debug = true;
 				continue;
 
+			case 'v':
+				std::cout << "Commit: " << GIT_COMMIT_MESSAGE << std::endl;
+				std::cout << "Date: " << GIT_COMMIT_DATE << std::endl;
+				return 0;
+
 			case 'h':
 			default :
 				std::cout << "usage:" << std::endl;
@@ -31,6 +37,7 @@ int main(int argc, char* argv[]) {
 				std::cout << "  -p	Set profile picture size" << std::endl;
 				std::cout << "  -m	Set primary monitor" << std::endl;
 				std::cout << "  -d	Enable debug mode" << std::endl;
+				std::cout << "  -v	Prints version info" << std::endl;
 				std::cout << "  -h	Show this help message" << std::endl;
 				return 0;
 
