@@ -12,6 +12,7 @@ syslock can be configured in 2 ways<br>
 2: Using launch arguments<br>
 ```
 arguments:
+  -p	Set profile picture size
   -m	Set primary monitor
   -d	Enable debug mode
 ```
