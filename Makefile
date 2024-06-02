@@ -4,8 +4,8 @@ SRCS +=	$(wildcard src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DESTDIR = $(HOME)/.local
 
-CFLAGS += -march=native -mtune=native -Os -s -Wall
-CXXFLAGS += $(CFLAGS) $(shell pkg-config --cflags $(PKGS))
+CXXFLAGS = -march=native -mtune=native -Os -s -Wall -flto=auto -fno-exceptions
+CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
 LDFLAGS += $(shell pkg-config --libs $(PKGS))
 
 PROTOS = ext-session-lock-v1
@@ -16,7 +16,9 @@ PROTO_SRCS = $(addprefix src/, $(addsuffix .c, $(notdir $(PROTOS))))
 PROTO_OBJS = $(PROTO_SRCS:.c=.o)
 
 $(EXEC): src/git_info.hpp $(PROTO_OBJS) $(OBJS)
-	$(CXX) -o $(EXEC) $(OBJS) $(PROTO_OBJS) \
+	$(CXX) -o $(EXEC) \
+	$(OBJS) \
+	$(PROTO_OBJS) \
 	$(LDFLAGS) \
 	$(CXXFLAGS)
 
@@ -39,4 +41,9 @@ install: $(EXEC)
 	install $(EXEC) $(DESTDIR)/bin/$(EXEC)
 
 clean:
-	rm	$(EXEC) $(SRCS:.cpp=.o) src/git_info.hpp $(PROTO_OBJS) $(PROTO_SRCS) $(PROTO_HDRS)
+	rm	$(EXEC) \
+		$(SRCS:.cpp=.o) \
+		src/git_info.hpp \
+		$(PROTO_OBJS) \
+		$(PROTO_SRCS) \
+		$(PROTO_HDRS)
