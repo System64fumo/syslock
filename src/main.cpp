@@ -7,7 +7,6 @@
 #include <getopt.h>
 
 int main(int argc, char* argv[]) {
-	// TODO: Add session lock protocol
 
 	// Read launch arguments
 	while (true) {
