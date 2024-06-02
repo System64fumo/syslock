@@ -1,4 +1,4 @@
-#include "pam.hpp"
+#include "auth.hpp"
 
 int pam_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr) {
 	struct pam_response *response = (struct pam_response *)malloc(num_msg * sizeof(struct pam_response));
