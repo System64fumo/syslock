@@ -48,6 +48,11 @@ syslock::syslock() {
 	entry_password.signal_activate().connect(sigc::mem_fun(*this, &syslock::on_entry));
 	entry_password.grab_focus();
 
+	// TODO: add remaining tries left
+	box_layout.append(label_error);
+	label_error.set_text("Incorrect password");
+	label_error.hide();
+
 	// Load custom css
 	std::string css_path = home_dir + "/.config/sys64/lock.css";
 
@@ -64,6 +69,7 @@ syslock::syslock() {
 
 // TODO: Make this non blocking
 void syslock::on_entry() {
+	label_error.hide();
 	char *user = getenv("USER");
 	std::string password = entry_password.get_buffer()->get_text().raw();
 	bool auth = authenticate(user, password.c_str());
@@ -77,6 +83,7 @@ void syslock::on_entry() {
 		// TODO: Display how many times the user can retry the password
 		std::cerr << "Authentication failed" << std::endl;
 		entry_password.set_text("");
+		label_error.show();
 	}
 }
 

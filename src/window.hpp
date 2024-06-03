@@ -11,6 +11,7 @@ class syslock : public Gtk::Window {
 		Gtk::Box box_layout;
 		Gtk::Image image_profile;
 		Gtk::Label label_username;
+		Gtk::Label label_error;
 		Gtk::Entry entry_password;
 
 		void on_entry();
