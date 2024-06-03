@@ -6,6 +6,15 @@
 #include <iostream>
 #include <getopt.h>
 
+void handle_signal(int signum) {
+	if (signum == 10) {
+		for (std::vector<Gtk::Window*>::iterator it = windows.begin(); it != windows.end(); ++it) {
+			Gtk::Window* window = *it;
+			window->show();
+		}
+	}
+}
+
 int main(int argc, char* argv[]) {
 
 	// Read launch arguments
@@ -50,6 +59,8 @@ int main(int argc, char* argv[]) {
 	app = Gtk::Application::create("funky.sys64.syslock");
 	app->hold();
 	win = new syslock();
+
+	signal(SIGUSR1, handle_signal);
 
 	return app->run();
 }
