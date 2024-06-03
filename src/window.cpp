@@ -26,6 +26,7 @@ syslock::syslock() {
 	
 		if (std::filesystem::exists(profile_picture)) {
 			box_layout.append(image_profile);
+			image_profile.get_style_context()->add_class("image_profile");
 			auto pixbuf = Gdk::Pixbuf::create_from_file(profile_picture);
 			pixbuf = pixbuf->scale_simple(profile_scale, profile_scale, Gdk::InterpType::BILINEAR);
 			// TODO: Add a way to enable/disable rounding the profile picture
@@ -37,11 +38,13 @@ syslock::syslock() {
 	}
 
 	box_layout.append(label_username);
+	label_username.get_style_context()->add_class("label_username");
 	uid_t uid = geteuid();
 	struct passwd *pw = getpwuid(uid);
 	label_username.set_text((Glib::ustring)pw->pw_gecos);
 
 	box_layout.append(entry_password);
+	entry_password.get_style_context()->add_class("entry_password");
 	entry_password.set_size_request(250, 30);
 	entry_password.set_halign(Gtk::Align::CENTER);
 	entry_password.set_visibility(false);
@@ -50,6 +53,7 @@ syslock::syslock() {
 
 	// TODO: add remaining tries left
 	box_layout.append(label_error);
+	label_error.get_style_context()->add_class("label_error");
 	label_error.set_text("Incorrect password");
 	label_error.hide();
 
