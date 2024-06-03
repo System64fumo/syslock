@@ -19,6 +19,10 @@ arguments:
   -v	Prints version info
 ```
 
+# Signals
+You can send a signal to show the window/s again.<br>
+``pkill -10 syslock``<br>
+
 # Theming
 syslock uses your gtk4 theme by default, However it can be also load custom css,<br>
 Just copy the included lock.css file to ~/.config/sys64/lock.css<br>

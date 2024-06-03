@@ -10,6 +10,7 @@
 
 syslock::syslock() {
 	// Initialize
+	windows.push_back(this);
 	set_default_size(640, 480);
 	set_hide_on_close(true);
 	show_windows();
@@ -81,7 +82,13 @@ void syslock::on_entry() {
 	if (auth) {
 		std::cout << "Authentication successful" << std::endl;
 		//unlock_session();
-		app->quit();
+
+		for (std::vector<Gtk::Window*>::iterator it = windows.begin(); it != windows.end(); ++it) {
+			Gtk::Window* window = *it;
+			window->hide();
+		}
+
+		entry_password.set_text("");
 	}
 	else {
 		// TODO: Display how many times the user can retry the password
@@ -131,6 +138,7 @@ void syslock::show_windows() {
 			// Create empty windows
 			Gtk::Window *window = new Gtk::Window();
 			app->add_window(*window);
+			windows.push_back(window);
 			setup_window(window->gobj(), monitor, "syslock-empty-window");
 			window->show();
 		}
