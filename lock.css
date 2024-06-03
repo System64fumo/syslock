@@ -1,0 +1,18 @@
+window {
+	background-image: url("/path/to/background.jpg");
+}
+
+image {
+	border: 3px solid white;
+	border-radius: 50%;
+	margin: 10px;
+}
+
+label {
+	font-size: 22px;
+	margin: 10px;
+}
+
+entry {
+	margin: 10px;
+}
