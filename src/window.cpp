@@ -7,6 +7,7 @@
 #include <iostream>
 #include <filesystem>
 #include <pwd.h>
+#include <gtkmm/cssprovider.h>
 
 syslock::syslock() {
 	// Initialize

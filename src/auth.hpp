@@ -1,7 +1,6 @@
-#include <iostream>
 #include <security/pam_appl.h>
-#include <gtkmm.h>
 #include <wayland-client.h>
+#include <gtkmm/window.h>
 
 inline struct wl_display *display = nullptr;
 inline struct wl_registry *registry = nullptr;
