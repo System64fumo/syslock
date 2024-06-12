@@ -1,8 +1,7 @@
 #include "auth.hpp"
 #include "ext-session-lock-v1.h"
 
-#include <cstring>
-#include <gdk/gdk.h>
+#include <iostream>
 #include <gdk/wayland/gdkwayland.h>
 
 int pam_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr) {

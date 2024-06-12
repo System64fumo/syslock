@@ -4,7 +4,6 @@
 #include "git_info.hpp"
 
 #include <iostream>
-#include <getopt.h>
 
 void handle_signal(int signum) {
 	if (signum == 10) {

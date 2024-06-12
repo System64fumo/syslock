@@ -1,4 +1,4 @@
-#include <gtkmm.h>
+#include <gdkmm/general.h>
 
 Glib::RefPtr<Gdk::Pixbuf> create_circular_pixbuf(const Glib::RefPtr<Gdk::Pixbuf>& src_pixbuf, int size) {
 	int width = src_pixbuf->get_width();
