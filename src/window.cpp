@@ -1,5 +1,6 @@
 #include "main.hpp"
 #include "window.hpp"
+#include "css.hpp"
 #include "config.hpp"
 #include "auth.hpp"
 
@@ -7,7 +8,6 @@
 #include <iostream>
 #include <filesystem>
 #include <pwd.h>
-#include <gtkmm/cssprovider.h>
 
 syslock::syslock() {
 	// Initialize
@@ -61,13 +61,7 @@ syslock::syslock() {
 
 	// Load custom css
 	std::string css_path = home_dir + "/.config/sys64/lock.css";
-
-	if (!std::filesystem::exists(css_path)) return;
-
-	auto css = Gtk::CssProvider::create();
-	css->load_from_path(css_path);
-	auto style_context = get_style_context();
-	style_context->add_provider_for_display(property_display(), css, GTK_STYLE_PROVIDER_PRIORITY_USER);
+	css_loader css(css_path, this);
 
 	// TODO: Figure out why ext session lock causes hyprland to red screen
 	//lock_session(*this);
