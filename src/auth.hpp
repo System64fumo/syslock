@@ -1,3 +1,4 @@
+#pragma once
 #include <security/pam_appl.h>
 #include <wayland-client.h>
 #include <gtkmm/window.h>

@@ -18,9 +18,17 @@ int main(int argc, char* argv[]) {
 
 	// Read launch arguments
 	while (true) {
-		switch(getopt(argc, argv, "p:dm:ddvh")) {
+		switch(getopt(argc, argv, "p:dkl:dm:ddvh")) {
 			case 'p':
 				profile_scale = std::stoi(optarg);
+				continue;
+
+			case 'k':
+				keypad_enabled = true;
+				continue;
+
+			case 'l':
+				pw_length = std::stoi(optarg);
 				continue;
 
 			case 'm':
@@ -42,6 +50,8 @@ int main(int argc, char* argv[]) {
 				std::cout << "  syslock [argument...]:\n" << std::endl;
 				std::cout << "arguments:" << std::endl;
 				std::cout << "  -p	Set profile picture size" << std::endl;
+				std::cout << "  -k	Enable the keypad" << std::endl;
+				std::cout << "  -l	Set password length" << std::endl;
 				std::cout << "  -m	Set primary monitor" << std::endl;
 				std::cout << "  -d	Enable debug mode" << std::endl;
 				std::cout << "  -v	Prints version info" << std::endl;

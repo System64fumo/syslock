@@ -20,6 +20,7 @@ class syslock : public Gtk::Window {
 		Gtk::Entry entry_password;
 
 		void on_entry();
+		void on_entry_changed();
 		void setup_window(GtkWindow *window, GdkMonitor *monitor, const char* name);
 		void show_windows();
 };
