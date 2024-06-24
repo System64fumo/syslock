@@ -2,6 +2,7 @@
 #include "window.hpp"
 #include "css.hpp"
 #include "config.hpp"
+#include "keypad.hpp"
 #include "auth.hpp"
 
 #include <gtk4-layer-shell.h>
@@ -65,6 +66,11 @@ syslock::syslock() {
 
 	// TODO: Figure out why ext session lock causes hyprland to red screen
 	//lock_session(*this);
+
+	// Keypad
+	// TODO: Enable this at a later date
+	//keypad keypad_main = keypad(entry_password);
+	//box_layout.append(keypad_main);
 }
 
 // TODO: Make this non blocking

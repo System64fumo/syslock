@@ -1,5 +1,6 @@
 #pragma once
 
+#include <gtkmm/button.h>
 #include <gtkmm/window.h>
 #include <gtkmm/box.h>
 #include <gtkmm/image.h>
