@@ -52,6 +52,7 @@ syslock::syslock() {
 	entry_password.set_halign(Gtk::Align::CENTER);
 	entry_password.set_visibility(false);
 	entry_password.signal_activate().connect(sigc::mem_fun(*this, &syslock::on_entry));
+	entry_password.signal_changed().connect(sigc::mem_fun(*this, &syslock::on_entry_changed));
 	entry_password.grab_focus();
 
 	// TODO: add remaining tries left
@@ -68,9 +69,10 @@ syslock::syslock() {
 	//lock_session(*this);
 
 	// Keypad
-	// TODO: Enable this at a later date
-	//keypad keypad_main = keypad(entry_password);
-	//box_layout.append(keypad_main);
+	if (keypad_enabled) {
+		keypad keypad_main = keypad(entry_password);
+		box_layout.append(keypad_main);
+	}
 }
 
 // TODO: Make this non blocking
@@ -96,6 +98,13 @@ void syslock::on_entry() {
 		std::cerr << "Authentication failed" << std::endl;
 		entry_password.set_text("");
 		label_error.show();
+	}
+}
+
+void syslock::on_entry_changed() {
+	// Trigger a password check automatically
+	if (entry_password.get_text().length() == pw_length) {
+		on_entry();
 	}
 }
 
