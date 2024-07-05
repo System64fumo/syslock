@@ -70,7 +70,7 @@ syslock::syslock() {
 
 	// Keypad
 	if (keypad_enabled) {
-		keypad keypad_main = keypad(entry_password);
+		keypad keypad_main = keypad(entry_password, std::bind(&syslock::on_entry, this));
 		box_layout.append(keypad_main);
 	}
 }
@@ -103,7 +103,7 @@ void syslock::on_entry() {
 
 void syslock::on_entry_changed() {
 	// Trigger a password check automatically
-	if (entry_password.get_text().length() == pw_length) {
+	if ((int)entry_password.get_text().length() == pw_length) {
 		on_entry();
 	}
 }
