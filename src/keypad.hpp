@@ -3,5 +3,5 @@
 
 class keypad : public Gtk::FlowBox {
 	public:
-		keypad(Gtk::Entry &entry);
+		keypad(Gtk::Entry &entry, const std::function<void()> &enter_func);
 };
