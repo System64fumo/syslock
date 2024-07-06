@@ -40,5 +40,7 @@ class syslock : public Gtk::Window {
 		void on_drag_start(const double &x, const double &y);
 		void on_drag_update(const double &x, const double &y);
 		void on_drag_stop(const double &x, const double &y);
+
+		bool update_time();
 };
 
