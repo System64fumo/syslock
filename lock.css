@@ -2,6 +2,20 @@ window {
 	background-image: url("/path/to/background.jpg");
 }
 
+/* Lock screen */
+.lock_screen {
+}
+
+.clock {
+	margin-top: 128px;
+	font-size: 64px;
+}
+
+/* Login screen */
+.login_screen {
+	background: rgba(0, 0, 0, 0.5);
+}
+
 .image_profile {
 	border: 3px solid white;
 	border-radius: 50%;
