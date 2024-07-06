@@ -17,18 +17,46 @@ syslock::syslock() {
 	set_hide_on_close(true);
 	show_windows();
 
+	// Set up drag gestures
+	gesture_drag = Gtk::GestureDrag::create();
+	gesture_drag->signal_drag_begin().connect(sigc::mem_fun(*this, &syslock::on_drag_start));
+	gesture_drag->signal_drag_update().connect(sigc::mem_fun(*this, &syslock::on_drag_update));
+	gesture_drag->signal_drag_end().connect(sigc::mem_fun(*this, &syslock::on_drag_stop));
+	add_controller(gesture_drag);
+
+	set_child(overlay);
+	overlay.set_child(box_lock_screen);
+	box_lock_screen.get_style_context()->add_class("lock_screen");
+	box_lock_screen.property_orientation().set_value(Gtk::Orientation::VERTICAL);
+	box_lock_screen.append(box_lock_screen);
+
+	// TODO: enable the clock later
+	/*box_lock_screen.append(label_clock);
+	label_clock.get_style_context()->add_class("clock");
+	label_clock.set_text("9:00");*/
+
+	// TODO: Add an on entry change event to show the login screen.
+	// TODO: Add a timeout event to hide the login screen. (Also clean the password box)
+	overlay.add_overlay(box_layout);
+	box_layout.get_style_context()->add_class("login_screen");
+	box_layout.set_kinetic_scrolling(false);
+	box_layout.set_child(box_login_screen);
+	box_layout.set_policy(Gtk::PolicyType::EXTERNAL, Gtk::PolicyType::EXTERNAL);
+	box_layout.set_valign(Gtk::Align::END);
+
+
+	box_login_screen.property_orientation().set_value(Gtk::Orientation::VERTICAL);
+	box_login_screen.set_valign(Gtk::Align::CENTER);
+	box_login_screen.set_vexpand(true);
+
 	// TODO: Clean this whole mess up
 	// And add a way to enable/disable specific features (PFP, Username, Ect)
-	set_child(box_layout);
-	box_layout.property_orientation().set_value(Gtk::Orientation::VERTICAL);
-	box_layout.set_valign(Gtk::Align::CENTER);
-
 	std::string home_dir = getenv("HOME");
 	if (profile_scale > 0) {
 		std::string profile_picture = home_dir + "/.face";
 	
 		if (std::filesystem::exists(profile_picture)) {
-			box_layout.append(image_profile);
+			box_login_screen.append(image_profile);
 			image_profile.get_style_context()->add_class("image_profile");
 			auto pixbuf = Gdk::Pixbuf::create_from_file(profile_picture);
 			pixbuf = pixbuf->scale_simple(profile_scale, profile_scale, Gdk::InterpType::BILINEAR);
@@ -40,13 +68,13 @@ syslock::syslock() {
 		}
 	}
 
-	box_layout.append(label_username);
+	box_login_screen.append(label_username);
 	label_username.get_style_context()->add_class("label_username");
 	uid_t uid = geteuid();
 	struct passwd *pw = getpwuid(uid);
 	label_username.set_text((Glib::ustring)pw->pw_gecos);
 
-	box_layout.append(entry_password);
+	box_login_screen.append(entry_password);
 	entry_password.get_style_context()->add_class("entry_password");
 	entry_password.set_size_request(250, 30);
 	entry_password.set_halign(Gtk::Align::CENTER);
@@ -56,7 +84,7 @@ syslock::syslock() {
 	entry_password.grab_focus();
 
 	// TODO: add remaining tries left
-	box_layout.append(label_error);
+	box_login_screen.append(label_error);
 	label_error.get_style_context()->add_class("label_error");
 	label_error.set_text("Incorrect password");
 	label_error.hide();
@@ -71,7 +99,7 @@ syslock::syslock() {
 	// Keypad
 	if (keypad_enabled) {
 		keypad keypad_main = keypad(entry_password, std::bind(&syslock::on_entry, this));
-		box_layout.append(keypad_main);
+		box_login_screen.append(keypad_main);
 	}
 }
 
@@ -154,4 +182,34 @@ void syslock::show_windows() {
 		}
 	}
 	show();
+}
+
+// TODO: Make the login screen background static,
+// Have the lock interface go up when pulling up instead.
+void syslock::on_drag_start(const double &x, const double &y) {
+	window_height = get_height();
+	start_height = box_layout.get_height();
+	box_layout.set_valign(Gtk::Align::END);
+	if (start_height > 300)
+		box_layout.set_size_request(-1, window_height);
+}
+
+void syslock::on_drag_update(const double &x, const double &y) {
+	if (start_height < 100)
+		box_layout.set_size_request(-1, -y);
+	else
+		box_layout.set_size_request(-1, start_height - y);
+	box_layout.set_opacity(box_layout.get_height() / window_height);
+}
+
+void syslock::on_drag_stop(const double &x, const double &y) {
+	if (box_layout.get_height() > 300) {
+		box_layout.set_valign(Gtk::Align::FILL);
+		box_layout.set_opacity(1);
+	}
+	else {
+		box_layout.set_valign(Gtk::Align::END);
+		box_layout.set_opacity(0);
+	}
+	box_layout.set_size_request(-1, -1);
 }
