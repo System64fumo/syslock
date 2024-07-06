@@ -9,6 +9,8 @@
 #include <iostream>
 #include <filesystem>
 #include <pwd.h>
+#include <glibmm/main.h>
+#include <ctime>
 
 syslock::syslock() {
 	// Initialize
@@ -30,10 +32,11 @@ syslock::syslock() {
 	box_lock_screen.property_orientation().set_value(Gtk::Orientation::VERTICAL);
 	box_lock_screen.append(box_lock_screen);
 
-	// TODO: enable the clock later
-	/*box_lock_screen.append(label_clock);
+	// TODO: Add config to set custom time formats
+	box_lock_screen.append(label_clock);
 	label_clock.get_style_context()->add_class("clock");
-	label_clock.set_text("9:00");*/
+	Glib::signal_timeout().connect(sigc::mem_fun(*this, &syslock::update_time), 1000);
+	update_time();
 
 	// TODO: Add an on entry change event to show the login screen.
 	// TODO: Add a timeout event to hide the login screen. (Also clean the password box)
@@ -212,4 +215,15 @@ void syslock::on_drag_stop(const double &x, const double &y) {
 		box_layout.set_opacity(0);
 	}
 	box_layout.set_size_request(-1, -1);
+}
+
+
+bool syslock::update_time() {
+	std::time_t now = std::time(nullptr);
+	std::tm* local_time = std::localtime(&now);
+
+	char label_buffer[32];
+	std::strftime(label_buffer, sizeof(label_buffer), "%H:%M", local_time);
+	label_clock.set_text(label_buffer);
+	return true;
 }
