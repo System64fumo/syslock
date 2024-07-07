@@ -47,7 +47,6 @@ syslock::syslock() {
 	box_layout.set_policy(Gtk::PolicyType::EXTERNAL, Gtk::PolicyType::EXTERNAL);
 	box_layout.set_valign(Gtk::Align::END);
 
-
 	box_login_screen.property_orientation().set_value(Gtk::Orientation::VERTICAL);
 	box_login_screen.set_valign(Gtk::Align::CENTER);
 	box_login_screen.set_vexpand(true);
@@ -85,6 +84,13 @@ syslock::syslock() {
 	entry_password.signal_activate().connect(sigc::mem_fun(*this, &syslock::on_entry));
 	entry_password.signal_changed().connect(sigc::mem_fun(*this, &syslock::on_entry_changed));
 	entry_password.grab_focus();
+	entry_password.signal_changed().connect([&]() {
+		box_layout.set_valign(Gtk::Align::FILL);
+		box_layout.set_opacity(1);
+		box_layout.set_size_request(-1, get_height());
+		connection.disconnect();
+		connection = Glib::signal_timeout().connect([&]() {lock();return false;}, 10 * 1000);
+	});
 
 	// TODO: add remaining tries left
 	box_login_screen.append(label_error);
@@ -190,6 +196,15 @@ void syslock::show_windows() {
 // TODO: Make the login screen background static,
 // Have the lock interface go up when pulling up instead.
 void syslock::on_drag_start(const double &x, const double &y) {
+	connection.disconnect();
+	if (!gesture_drag->get_current_event()->get_pointer_emulated()) {
+		box_layout.set_valign(Gtk::Align::FILL);
+		box_layout.set_opacity(1);
+		box_layout.set_size_request(-1, get_height());
+		gesture_drag->reset();
+		return;
+	}
+
 	window_height = get_height();
 	start_height = box_layout.get_height();
 	box_layout.set_valign(Gtk::Align::END);
@@ -206,6 +221,10 @@ void syslock::on_drag_update(const double &x, const double &y) {
 }
 
 void syslock::on_drag_stop(const double &x, const double &y) {
+	connection = Glib::signal_timeout().connect([&]() {lock();return false;}, 10 * 1000);
+	if (!gesture_drag->get_current_event()->get_pointer_emulated())
+		return;
+
 	if (box_layout.get_height() > 300) {
 		box_layout.set_valign(Gtk::Align::FILL);
 		box_layout.set_opacity(1);
@@ -226,4 +245,10 @@ bool syslock::update_time() {
 	std::strftime(label_buffer, sizeof(label_buffer), "%H:%M", local_time);
 	label_clock.set_text(label_buffer);
 	return true;
+}
+
+void syslock::lock() {
+	box_layout.set_valign(Gtk::Align::END);
+	box_layout.set_opacity(0);
+	box_layout.set_size_request(-1, -1);
 }
