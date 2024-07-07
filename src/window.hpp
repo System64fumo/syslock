@@ -23,7 +23,8 @@ class syslock : public Gtk::Window {
 
 		Gtk::Box box_lock_screen;
 		Gtk::Box box_login_screen;
-		Gtk::ScrolledWindow box_layout;
+		Gtk::Box box_layout;
+		Gtk::ScrolledWindow scrolled_window;
 		Gtk::Overlay overlay;
 
 		Gtk::Label label_clock;
