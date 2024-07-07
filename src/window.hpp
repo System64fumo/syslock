@@ -14,10 +14,12 @@ class syslock : public Gtk::Window {
 
 	public:
 		syslock();
+		void lock();
 
 	private:
 		double window_height;
 		int start_height;
+		sigc::connection connection;
 
 		Gtk::Box box_lock_screen;
 		Gtk::Box box_login_screen;

@@ -7,6 +7,7 @@
 
 void handle_signal(int signum) {
 	if (signum == 10) {
+		win->lock();
 		for (std::vector<Gtk::Window*>::iterator it = windows.begin(); it != windows.end(); ++it) {
 			Gtk::Window* window = *it;
 			window->show();
