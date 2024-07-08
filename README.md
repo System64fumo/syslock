@@ -27,4 +27,4 @@ You can send a signal to show the window/s again.<br>
 
 # Theming
 syslock uses your gtk4 theme by default, However it can be also load custom css,<br>
-Just copy the included lock.css file to ~/.config/sys64/lock.css<br>
+Just copy the included style.css file to ~/.config/sys64/lock/style.css<br>
