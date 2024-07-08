@@ -103,7 +103,7 @@ syslock::syslock() {
 	label_error.hide();
 
 	// Load custom css
-	std::string css_path = home_dir + "/.config/sys64/lock.css";
+	std::string css_path = home_dir + "/.config/sys64/lock/style.css";
 	css_loader css(css_path, this);
 
 	// TODO: Figure out why ext session lock causes hyprland to red screen
