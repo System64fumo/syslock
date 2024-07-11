@@ -3,15 +3,12 @@
 #include "config.hpp"
 #include "git_info.hpp"
 
+#include <gtkmm/application.h>
 #include <iostream>
 
 void handle_signal(int signum) {
 	if (signum == 10) {
 		win->lock();
-		for (std::vector<Gtk::Window*>::iterator it = windows.begin(); it != windows.end(); ++it) {
-			Gtk::Window* window = *it;
-			window->show();
-		}
 	}
 }
 
@@ -21,23 +18,23 @@ int main(int argc, char* argv[]) {
 	while (true) {
 		switch(getopt(argc, argv, "p:dkl:dm:ddvh")) {
 			case 'p':
-				profile_scale = std::stoi(optarg);
+				config_main.profile_scale = std::stoi(optarg);
 				continue;
 
 			case 'k':
-				keypad_enabled = true;
+				config_main.keypad_enabled = true;
 				continue;
 
 			case 'l':
-				pw_length = std::stoi(optarg);
+				config_main.pw_length = std::stoi(optarg);
 				continue;
 
 			case 'm':
-				main_monitor = std::stoi(optarg);
+				config_main.main_monitor = std::stoi(optarg);
 				continue;
 
 			case 'd':
-				debug = true;
+				config_main.debug = true;
 				continue;
 
 			case 'v':
@@ -66,9 +63,9 @@ int main(int argc, char* argv[]) {
 			break;
 	}
 
-	app = Gtk::Application::create("funky.sys64.syslock");
+	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("funky.sys64.syslock");
 	app->hold();
-	win = new syslock();
+	win = new syslock(config_main);
 
 	signal(SIGUSR1, handle_signal);
 
