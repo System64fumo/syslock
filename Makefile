@@ -1,12 +1,13 @@
 EXEC = syslock
+LIB = libsyslock.so
 PKGS = gtkmm-4.0 gtk4-layer-shell-0 pam wayland-client
-SRCS +=	$(wildcard src/*.cpp)
+SRCS =	$(filter-out src/main.cpp, $(wildcard src/*.cpp))
 OBJS = $(SRCS:.cpp=.o)
 DESTDIR = $(HOME)/.local
 
-CXXFLAGS = -march=native -mtune=native -Os -s -Wall -flto=auto -fno-exceptions
+CXXFLAGS = -march=native -mtune=native -Os -s -Wall -flto=auto -fno-exceptions -fPIC
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
-LDFLAGS += $(shell pkg-config --libs $(PKGS))
+LDFLAGS = $(shell pkg-config --libs $(PKGS))
 
 PROTOS = ext-session-lock-v1
 PROTO_DIR = /usr/share/wayland-protocols/staging/ext-session-lock
@@ -15,12 +16,33 @@ PROTO_HDRS = $(addprefix src/, $(addsuffix .h, $(notdir $(PROTOS))))
 PROTO_SRCS = $(addprefix src/, $(addsuffix .c, $(notdir $(PROTOS))))
 PROTO_OBJS = $(PROTO_SRCS:.c=.o)
 
-$(EXEC): src/git_info.hpp $(PROTO_OBJS) $(OBJS)
+all: $(EXEC) $(LIB)
+
+install: $(EXEC) $(LIB)
+	mkdir -p $(DESTDIR)/bin $(DESTDIR)/lib
+	install $(EXEC) $(DESTDIR)/bin/$(EXEC)
+	install $(EXEC) $(DESTDIR)/lib/$(EXEC)
+
+clean:
+	rm	$(EXEC) \
+		$(SRCS:.cpp=.o) \
+		src/git_info.hpp \
+		$(PROTO_OBJS) \
+		$(PROTO_SRCS) \
+		$(PROTO_HDRS)
+
+$(EXEC): src/main.cpp src/git_info.hpp
 	$(CXX) -o $(EXEC) \
+	src/main.cpp \
+	$(CXXFLAGS) \
+	$(LDFLAGS)
+
+$(LIB): $(OBJS) $(PROTO_OBJS)
+	$(CXX) -o $(LIB) \
 	$(OBJS) \
 	$(PROTO_OBJS) \
-	$(LDFLAGS) \
-	$(CXXFLAGS)
+	$(CXXFLAGS) \
+	-shared
 
 %.o: %.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS)
@@ -35,15 +57,3 @@ src/git_info.hpp:
 	commit_message=$$(git show -s --format=%s $$commit_hash); \
 	echo "#define GIT_COMMIT_MESSAGE \"$$commit_message\"" > src/git_info.hpp; \
 	echo "#define GIT_COMMIT_DATE \"$$commit_date\"" >> src/git_info.hpp
-
-install: $(EXEC)
-	mkdir -p $(DESTDIR)/bin
-	install $(EXEC) $(DESTDIR)/bin/$(EXEC)
-
-clean:
-	rm	$(EXEC) \
-		$(SRCS:.cpp=.o) \
-		src/git_info.hpp \
-		$(PROTO_OBJS) \
-		$(PROTO_SRCS) \
-		$(PROTO_HDRS)
