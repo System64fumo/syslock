@@ -1,6 +1,8 @@
+#include "window.hpp"
+
 #include <gdkmm/general.h>
 
-Glib::RefPtr<Gdk::Pixbuf> create_circular_pixbuf(const Glib::RefPtr<Gdk::Pixbuf>& src_pixbuf, int size) {
+Glib::RefPtr<Gdk::Pixbuf> syslock::create_circular_pixbuf(const Glib::RefPtr<Gdk::Pixbuf>& src_pixbuf, int size) {
 	int width = src_pixbuf->get_width();
 	int height = src_pixbuf->get_height();
 

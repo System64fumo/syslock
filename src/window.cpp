@@ -1,4 +1,3 @@
-#include "main.hpp"
 #include "window.hpp"
 #include "css.hpp"
 #include "config.hpp"
@@ -12,7 +11,9 @@
 #include <glibmm/main.h>
 #include <ctime>
 
-syslock::syslock() {
+syslock::syslock(const config &cfg) {
+	config_main = cfg;
+
 	// Initialize
 	windows.push_back(this);
 	set_default_size(640, 480);
@@ -58,17 +59,17 @@ syslock::syslock() {
 	// TODO: Clean this whole mess up
 	// And add a way to enable/disable specific features (PFP, Username, Ect)
 	std::string home_dir = getenv("HOME");
-	if (profile_scale > 0) {
+	if (config_main.profile_scale > 0) {
 		std::string profile_picture = home_dir + "/.face";
 	
 		if (std::filesystem::exists(profile_picture)) {
 			box_login_screen.append(image_profile);
 			image_profile.get_style_context()->add_class("image_profile");
 			auto pixbuf = Gdk::Pixbuf::create_from_file(profile_picture);
-			pixbuf = pixbuf->scale_simple(profile_scale, profile_scale, Gdk::InterpType::BILINEAR);
+			pixbuf = pixbuf->scale_simple(config_main.profile_scale, config_main.profile_scale, Gdk::InterpType::BILINEAR);
 			// TODO: Add a way to enable/disable rounding the profile picture
-			pixbuf = create_circular_pixbuf(pixbuf, profile_scale);
-			image_profile.set_size_request(profile_scale, profile_scale);
+			pixbuf = create_circular_pixbuf(pixbuf, config_main.profile_scale);
+			image_profile.set_size_request(config_main.profile_scale, config_main.profile_scale);
 			image_profile.set(pixbuf);
 			image_profile.set_halign(Gtk::Align::CENTER);
 		}
@@ -110,7 +111,7 @@ syslock::syslock() {
 	//lock_session(*this);
 
 	// Keypad
-	if (keypad_enabled) {
+	if (config_main.keypad_enabled) {
 		keypad keypad_main = keypad(entry_password, std::bind(&syslock::on_entry, this));
 		box_login_screen.append(keypad_main);
 	}
@@ -144,7 +145,7 @@ void syslock::on_entry() {
 
 void syslock::on_entry_changed() {
 	// Trigger a password check automatically
-	if ((int)entry_password.get_text().length() == pw_length) {
+	if ((int)entry_password.get_text().length() == config_main.pw_length) {
 		on_entry();
 	}
 }
@@ -167,28 +168,27 @@ void syslock::show_windows() {
 
 	int monitorCount = g_list_model_get_n_items(monitors);
 
-	if (main_monitor < 0)
-		main_monitor = 0;
-	else if (main_monitor >= monitorCount)
-		main_monitor = monitorCount - 1;
+	if (config_main.main_monitor < 0)
+		config_main.main_monitor = 0;
+	else if (config_main.main_monitor >= monitorCount)
+		config_main.main_monitor = monitorCount - 1;
 
 	// Set up layer shell
-	if (!debug) {
-		setup_window(gobj(), GDK_MONITOR(g_list_model_get_item(monitors, main_monitor)), "syslock");
+	if (!config_main.debug) {
+		setup_window(gobj(), GDK_MONITOR(g_list_model_get_item(monitors, config_main.main_monitor)), "syslock");
 		gtk_layer_set_keyboard_mode(gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
 
 		// TODO: (VERY CRITICAL!!!)
 		// Add a way to detect when a monitor is connected/disconnected
 		for (int i = 0; i < monitorCount; ++i) {
 			// Ignore primary monitor
-			if (i == main_monitor)
+			if (i == config_main.main_monitor)
 				continue;
 	
 			GdkMonitor *monitor = GDK_MONITOR(g_list_model_get_item(monitors, i));
 	
 			// Create empty windows
 			Gtk::Window *window = new Gtk::Window();
-			app->add_window(*window);
 			windows.push_back(window);
 			setup_window(window->gobj(), monitor, "syslock-empty-window");
 			window->show();
@@ -255,4 +255,9 @@ void syslock::lock() {
 	scrolled_window.set_valign(Gtk::Align::END);
 	box_layout.set_opacity(0);
 	scrolled_window.set_size_request(-1, -1);
+
+	for (std::vector<Gtk::Window*>::iterator it = windows.begin(); it != windows.end(); ++it) {
+		Gtk::Window* window = *it;
+		window->show();
+	}
 }

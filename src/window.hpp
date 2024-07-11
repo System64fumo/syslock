@@ -1,5 +1,4 @@
 #pragma once
-
 #include <gtkmm/overlay.h>
 #include <gtkmm/button.h>
 #include <gtkmm/window.h>
@@ -9,14 +8,19 @@
 #include <gtkmm/label.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/gesturedrag.h>
+#include <gdkmm/general.h>
+
+#include "config.hpp"
 
 class syslock : public Gtk::Window {
 
 	public:
-		syslock();
+		syslock(const config &cfg);
 		void lock();
 
 	private:
+		std::vector<Gtk::Window*> windows;
+		config config_main;
 		double window_height;
 		int start_height;
 		sigc::connection connection;
@@ -34,6 +38,8 @@ class syslock : public Gtk::Window {
 		Gtk::Label label_error;
 		Gtk::Entry entry_password;
 		Glib::RefPtr<Gtk::GestureDrag> gesture_drag;
+
+		Glib::RefPtr<Gdk::Pixbuf> create_circular_pixbuf(const Glib::RefPtr<Gdk::Pixbuf>& src_pixbuf, int size);
 
 		void on_entry();
 		void on_entry_changed();
