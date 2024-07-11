@@ -21,7 +21,7 @@ all: $(EXEC) $(LIB)
 install: $(EXEC) $(LIB)
 	mkdir -p $(DESTDIR)/bin $(DESTDIR)/lib
 	install $(EXEC) $(DESTDIR)/bin/$(EXEC)
-	install $(EXEC) $(DESTDIR)/lib/$(EXEC)
+	install $(LIB) $(DESTDIR)/lib/$(LIB)
 
 clean:
 	rm	$(EXEC) \
