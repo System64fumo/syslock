@@ -5,10 +5,28 @@
 
 #include <gtkmm/application.h>
 #include <iostream>
+#include <dlfcn.h>
+
+void load_libsyslock() {
+	void* handle = dlopen("libsyslock.so", RTLD_LAZY);
+	if (!handle) {
+		std::cerr << "Cannot open library: " << dlerror() << '\n';
+		exit(1);
+	}
+
+	syslock_create_ptr = (syslock_create_func)dlsym(handle, "syslock_create");
+	syslock_lock_ptr = (syslock_lock_func)dlsym(handle, "syslock_lock");
+
+	if (!syslock_create_ptr || !syslock_lock_ptr) {
+		std::cerr << "Cannot load symbols: " << dlerror() << '\n';
+		dlclose(handle);
+		exit(1);
+	}
+}
 
 void handle_signal(int signum) {
 	if (signum == 10) {
-		win->lock();
+		syslock_lock_ptr(win);
 	}
 }
 
@@ -65,7 +83,9 @@ int main(int argc, char* argv[]) {
 
 	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("funky.sys64.syslock");
 	app->hold();
-	win = new syslock(config_main);
+
+	load_libsyslock();
+	win = syslock_create_ptr(config_main);
 
 	signal(SIGUSR1, handle_signal);
 

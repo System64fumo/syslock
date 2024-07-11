@@ -261,3 +261,13 @@ void syslock::lock() {
 		window->show();
 	}
 }
+
+extern "C" {
+	syslock *syslock_create(const config &cfg) {
+		return new syslock(cfg);
+	}
+
+	void syslock_lock(syslock *window) {
+		window->lock();
+	}
+}

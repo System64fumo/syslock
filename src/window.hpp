@@ -53,3 +53,8 @@ class syslock : public Gtk::Window {
 		bool update_time();
 };
 
+extern "C" {
+	syslock *syslock_create(const config &cfg);
+	void syslock_lock(syslock* window);
+}
+
