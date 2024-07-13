@@ -18,8 +18,9 @@ class syslock : public Gtk::Window {
 		syslock(const config &cfg);
 		void lock();
 
-	private:
 		std::vector<Gtk::Window*> windows;
+
+	private:
 		config config_main;
 		double window_height;
 		int start_height;

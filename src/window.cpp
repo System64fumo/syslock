@@ -255,11 +255,6 @@ void syslock::lock() {
 	scrolled_window.set_valign(Gtk::Align::END);
 	box_layout.set_opacity(0);
 	scrolled_window.set_size_request(-1, -1);
-
-	for (std::vector<Gtk::Window*>::iterator it = windows.begin(); it != windows.end(); ++it) {
-		Gtk::Window* window = *it;
-		window->show();
-	}
 }
 
 extern "C" {
@@ -269,5 +264,9 @@ extern "C" {
 
 	void syslock_lock(syslock *window) {
 		window->lock();
+		for (std::vector<Gtk::Window*>::iterator it = window->windows.begin(); it != window->windows.end(); ++it) {
+			Gtk::Window* window = *it;
+			window->show();
+		}
 	}
 }
