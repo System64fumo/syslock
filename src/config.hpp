@@ -1,7 +1,7 @@
 #pragma once
 
 // Default config
-struct config {
+struct config_lock {
 	int main_monitor = 0;
 	int profile_scale = 128;
 	bool debug = false;

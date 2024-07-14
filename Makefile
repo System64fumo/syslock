@@ -25,6 +25,7 @@ install: $(EXEC) $(LIB)
 
 clean:
 	rm	$(EXEC) \
+		$(LIB) \
 		$(SRCS:.cpp=.o) \
 		src/git_info.hpp \
 		$(PROTO_OBJS) \

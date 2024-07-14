@@ -11,7 +11,7 @@
 #include <glibmm/main.h>
 #include <ctime>
 
-syslock::syslock(const config &cfg) {
+syslock::syslock(const config_lock &cfg) {
 	config_main = cfg;
 
 	// Initialize
@@ -258,7 +258,7 @@ void syslock::lock() {
 }
 
 extern "C" {
-	syslock *syslock_create(const config &cfg) {
+	syslock *syslock_create(const config_lock &cfg) {
 		return new syslock(cfg);
 	}
 
