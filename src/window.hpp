@@ -15,13 +15,13 @@
 class syslock : public Gtk::Window {
 
 	public:
-		syslock(const config &cfg);
+		syslock(const config_lock &cfg);
 		void lock();
 
 		std::vector<Gtk::Window*> windows;
 
 	private:
-		config config_main;
+		config_lock config_main;
 		double window_height;
 		int start_height;
 		sigc::connection connection;
@@ -55,7 +55,7 @@ class syslock : public Gtk::Window {
 };
 
 extern "C" {
-	syslock *syslock_create(const config &cfg);
+	syslock *syslock_create(const config_lock &cfg);
 	void syslock_lock(syslock* window);
 }
 
