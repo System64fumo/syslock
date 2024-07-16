@@ -15,6 +15,7 @@ syslock::syslock(const config_lock &cfg) {
 	config_main = cfg;
 
 	// Initialize
+	set_name("syslock");
 	windows.push_back(this);
 	set_default_size(640, 480);
 	set_hide_on_close(true);
