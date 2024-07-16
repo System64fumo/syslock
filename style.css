@@ -1,36 +1,36 @@
-window {
+#syslock {
 	background-image: url("/path/to/background.jpg");
 }
 
 /* Lock screen */
-.lock_screen {
+#syslock .lock_screen {
 }
 
-.clock {
+#syslock .clock {
 	margin-top: 128px;
 	font-size: 64px;
 }
 
 /* Login screen */
-.login_screen {
+#syslock .login_screen {
 	background: rgba(0, 0, 0, 0.5);
 }
 
-.image_profile {
+#syslock .image_profile {
 	border: 3px solid white;
 	border-radius: 50%;
 	margin: 10px;
 }
 
-.label_username {
+#syslock .label_username {
 	font-size: 22px;
 	margin: 10px;
 }
 
-.entry_password {
+#syslock .entry_password {
 	margin: 10px;
 }
 
-.label_error {
+#syslock .label_error {
 	color: rgb(255,150,125);
 }
