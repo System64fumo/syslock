@@ -192,10 +192,14 @@ void syslock::show_windows() {
 			Gtk::Window *window = new Gtk::Window();
 			windows.push_back(window);
 			setup_window(window->gobj(), monitor, "syslock-empty-window");
-			window->show();
+
+			if (!config_main.start_unlocked)
+				window->show();
 		}
 	}
-	show();
+
+	if (!config_main.start_unlocked)
+		show();
 }
 
 // TODO: Make the login screen background static,

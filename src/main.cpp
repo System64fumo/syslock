@@ -1,6 +1,7 @@
 #include "main.hpp"
 #include "window.hpp"
 #include "config.hpp"
+#include "config_parser.hpp"
 #include "git_info.hpp"
 
 #include <gtkmm/application.h>
@@ -31,10 +32,39 @@ void handle_signal(int signum) {
 }
 
 int main(int argc, char* argv[]) {
+	// Load the config
+	#ifdef CONFIG_FILE
+	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
+
+	std::string cfg_start_unlocked = config.get_value("main", "start-unlocked");
+	config_main.start_unlocked = (cfg_start_unlocked == "true");
+
+	std::string cfg_profile_scale = config.get_value("main", "profile-scale");
+	if (cfg_profile_scale != "empty")
+		config_main.profile_scale = std::stoi(cfg_profile_scale);
+
+	std::string cfg_keypad = config.get_value("main", "keypad");
+	config_main.keypad_enabled = (cfg_keypad == "true");
+
+	std::string cfg_pw_length = config.get_value("main", "password-length");
+	if (cfg_pw_length != "empty")
+		config_main.pw_length = std::stoi(cfg_pw_length);
+
+	std::string cfg_main_monitor = config.get_value("main", "main-monitor");
+	if (cfg_main_monitor != "empty")
+		config_main.main_monitor = std::stoi(cfg_main_monitor);
+
+	// Debug doesn't need a config entry
+	#endif
 
 	// Read launch arguments
+	#ifdef RUNTIME_CONFIG
 	while (true) {
-		switch(getopt(argc, argv, "p:dkl:dm:ddvh")) {
+		switch(getopt(argc, argv, "sp:dkl:dm:ddvh")) {
+			case 's':
+				config_main.start_unlocked=true;
+				continue;
+
 			case 'p':
 				config_main.profile_scale = std::stoi(optarg);
 				continue;
@@ -65,6 +95,7 @@ int main(int argc, char* argv[]) {
 				std::cout << "usage:" << std::endl;
 				std::cout << "  syslock [argument...]:\n" << std::endl;
 				std::cout << "arguments:" << std::endl;
+				std::cout << "  -s	Start unlocked" << std::endl;
 				std::cout << "  -p	Set profile picture size" << std::endl;
 				std::cout << "  -k	Enable the keypad" << std::endl;
 				std::cout << "  -l	Set password length" << std::endl;
@@ -80,6 +111,7 @@ int main(int argc, char* argv[]) {
 
 			break;
 	}
+	#endif
 
 	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("funky.sys64.syslock");
 	app->hold();
