@@ -11,6 +11,7 @@
 #include <gdkmm/general.h>
 
 #include "config.hpp"
+#include "keypad.hpp"
 
 class syslock : public Gtk::Window {
 
@@ -39,6 +40,7 @@ class syslock : public Gtk::Window {
 		Gtk::Label label_error;
 		Gtk::Entry entry_password;
 		Glib::RefPtr<Gtk::GestureDrag> gesture_drag;
+		keypad *keypad_main;
 
 		Glib::RefPtr<Gdk::Pixbuf> create_circular_pixbuf(const Glib::RefPtr<Gdk::Pixbuf>& src_pixbuf, int size);
 

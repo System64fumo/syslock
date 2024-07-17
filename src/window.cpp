@@ -1,7 +1,6 @@
 #include "window.hpp"
 #include "css.hpp"
 #include "config.hpp"
-#include "keypad.hpp"
 #include "auth.hpp"
 
 #include <gtk4-layer-shell.h>
@@ -32,7 +31,6 @@ syslock::syslock(const config_lock &cfg) {
 	overlay.set_child(box_lock_screen);
 	box_lock_screen.get_style_context()->add_class("lock_screen");
 	box_lock_screen.property_orientation().set_value(Gtk::Orientation::VERTICAL);
-	box_lock_screen.append(box_lock_screen);
 
 	// TODO: Add config to set custom time formats
 	box_lock_screen.append(label_clock);
@@ -113,8 +111,8 @@ syslock::syslock(const config_lock &cfg) {
 
 	// Keypad
 	if (config_main.keypad_enabled) {
-		keypad keypad_main = keypad(entry_password, std::bind(&syslock::on_entry, this));
-		box_login_screen.append(keypad_main);
+		keypad_main = Gtk::make_managed<keypad>(entry_password, std::bind(&syslock::on_entry, this));
+		box_login_screen.append(*keypad_main);
 	}
 }
 
@@ -202,10 +200,20 @@ void syslock::show_windows() {
 		show();
 }
 
-// TODO: Make the login screen background static,
-// Have the lock interface go up when pulling up instead.
 void syslock::on_drag_start(const double &x, const double &y) {
 	connection.disconnect();
+
+	// Block gesture inputs from the keypad
+	if (config_main.keypad_enabled) {
+		double keypad_x, keypad_y;
+		keypad_main->translate_coordinates(box_lock_screen, 0, 0, keypad_x, keypad_y);
+
+		if (x >= keypad_x && x <= keypad_x + keypad_main->get_width() &&
+			y >= keypad_y && y <= keypad_y + keypad_main->get_height()) {
+			gesture_drag->reset();
+		}
+	}
+
 	if (!gesture_drag->get_current_event()->get_pointer_emulated()) {
 		scrolled_window.set_valign(Gtk::Align::FILL);
 		box_layout.set_opacity(1);
@@ -244,7 +252,6 @@ void syslock::on_drag_stop(const double &x, const double &y) {
 	}
 	scrolled_window.set_size_request(-1, -1);
 }
-
 
 bool syslock::update_time() {
 	std::time_t now = std::time(nullptr);
