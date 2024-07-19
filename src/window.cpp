@@ -18,7 +18,6 @@ syslock::syslock(const config_lock &cfg) {
 	windows.push_back(this);
 	set_default_size(640, 480);
 	set_hide_on_close(true);
-	show_windows();
 
 	// Set up drag gestures
 	gesture_drag = Gtk::GestureDrag::create();
@@ -102,10 +101,6 @@ syslock::syslock(const config_lock &cfg) {
 	label_error.set_text("Incorrect password");
 	label_error.hide();
 
-	// Load custom css
-	std::string css_path = home_dir + "/.config/sys64/lock/style.css";
-	css_loader css(css_path, this);
-
 	// TODO: Figure out why ext session lock causes hyprland to red screen
 	//lock_session(*this);
 
@@ -114,6 +109,22 @@ syslock::syslock(const config_lock &cfg) {
 		keypad_main = Gtk::make_managed<keypad>(entry_password, std::bind(&syslock::on_entry, this));
 		box_login_screen.append(*keypad_main);
 	}
+
+	// Load custom css
+	std::string css_path = home_dir + "/.config/sys64/lock/style.css";
+	css_loader css(css_path, this);
+
+	// This is stupid
+	// WHY?
+	signal_map().connect([this] () {
+		get_style_context()->remove_class("locked");
+		Glib::signal_timeout().connect([this]() {
+			get_style_context()->add_class("locked");
+			return false;
+		}, 100);
+	});
+
+	show_windows();
 }
 
 // TODO: Make this non blocking
@@ -122,17 +133,28 @@ void syslock::on_entry() {
 	char *user = getenv("USER");
 	std::string password = entry_password.get_buffer()->get_text().raw();
 	bool auth = authenticate(user, password.c_str());
+	label_error.hide();
 
 	if (auth) {
 		std::cout << "Authentication successful" << std::endl;
 		//unlock_session();
 
+		// Add a delay for fancy css animations
 		for (std::vector<Gtk::Window*>::iterator it = windows.begin(); it != windows.end(); ++it) {
 			Gtk::Window* window = *it;
-			window->hide();
+			window->get_style_context()->remove_class("locked");
+			window->get_style_context()->add_class("unlocked");
 		}
-
-		entry_password.set_text("");
+		Glib::signal_timeout().connect([this]() {
+			for (std::vector<Gtk::Window*>::iterator it = windows.begin(); it != windows.end(); ++it) {
+				Gtk::Window* window = *it;
+				window->get_style_context()->add_class("locked");
+				window->get_style_context()->remove_class("unlocked");
+				window->hide();
+			}
+			entry_password.set_text("");
+			return false;
+		}, 250);
 	}
 	else {
 		// TODO: Display how many times the user can retry the password
@@ -187,7 +209,9 @@ void syslock::show_windows() {
 			GdkMonitor *monitor = GDK_MONITOR(g_list_model_get_item(monitors, i));
 	
 			// Create empty windows
-			Gtk::Window *window = new Gtk::Window();
+			Gtk::Window *window = Gtk::make_managed<Gtk::Window>();
+			window->set_name("syslock-empty-window");
+			window->get_style_context()->add_class("locked");
 			windows.push_back(window);
 			setup_window(window->gobj(), monitor, "syslock-empty-window");
 
