@@ -31,11 +31,16 @@ syslock::syslock(const config_lock &cfg) {
 	box_lock_screen.get_style_context()->add_class("lock_screen");
 	box_lock_screen.property_orientation().set_value(Gtk::Orientation::VERTICAL);
 
-	// TODO: Add config to set custom time formats
+	// TODO: Add a config option to select what appears on the lockscreen
+	// TODO: Add config options to set custom date & time formats
 	box_lock_screen.append(label_clock);
 	label_clock.get_style_context()->add_class("clock");
-	Glib::signal_timeout().connect(sigc::mem_fun(*this, &syslock::update_time), 1000);
-	update_time();
+
+	box_lock_screen.append(label_date);
+	label_date.get_style_context()->add_class("date");
+
+	Glib::signal_timeout().connect(sigc::mem_fun(*this, &syslock::update_time_date), 1000);
+	update_time_date();
 
 	// TODO: Add an on entry change event to show the login screen.
 	// TODO: Add a timeout event to hide the login screen. (Also clean the password box)
@@ -277,13 +282,17 @@ void syslock::on_drag_stop(const double &x, const double &y) {
 	scrolled_window.set_size_request(-1, -1);
 }
 
-bool syslock::update_time() {
+bool syslock::update_time_date() {
 	std::time_t now = std::time(nullptr);
 	std::tm* local_time = std::localtime(&now);
 
-	char label_buffer[32];
-	std::strftime(label_buffer, sizeof(label_buffer), "%H:%M", local_time);
-	label_clock.set_text(label_buffer);
+	char time_buffer[32];
+	std::strftime(time_buffer, sizeof(time_buffer), "%H:%M", local_time);
+	label_clock.set_text(time_buffer);
+
+	char date_buffer[32];
+	std::strftime(date_buffer, sizeof(date_buffer), "%a %d %b", local_time);
+	label_date.set_text(date_buffer);
 	return true;
 }
 

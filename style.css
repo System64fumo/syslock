@@ -12,6 +12,9 @@
 	margin-top: 200px;
 	font-size: 96px;
 }
+#syslock .date {
+	font-size: 18px;
+}
 
 /* Login screen */
 #syslock .login_screen {
