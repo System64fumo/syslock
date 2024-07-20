@@ -33,8 +33,10 @@ class syslock : public Gtk::Window {
 		Gtk::ScrolledWindow scrolled_window;
 		Gtk::Overlay overlay;
 
-		Gtk::Label label_clock;
+		Gtk::Label label_time;
 		Gtk::Label label_date;
+		std::string time_format = "%H:%M";
+		std::string date_format = "%a %d %b";
 
 		Gtk::Image image_profile;
 		Gtk::Label label_username;
