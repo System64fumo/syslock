@@ -15,7 +15,6 @@ syslock can be configured in 2 ways<br>
 ```
 arguments:
   -s	Start unlocked
-  -p	Set profile picture size
   -k	Enable the keypad
   -l	Set password length (For automatic unlocks)
   -m	Set primary monitor

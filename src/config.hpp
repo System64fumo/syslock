@@ -7,7 +7,6 @@
 // Default config
 struct config_lock {
 	bool start_unlocked = false;
-	int profile_scale = 128;
 	bool keypad_enabled = false;
 	int pw_length = -1;
 	int main_monitor = 0;
