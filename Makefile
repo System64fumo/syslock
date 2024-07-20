@@ -41,7 +41,7 @@ $(EXEC): src/main.o src/config_parser.o src/git_info.hpp
 
 $(LIB): $(OBJS) $(PROTO_OBJS)
 	$(CXX) -o $(LIB) \
-	$(filter-out src/main.o src/config_parser.o, $(OBJS)) \
+	$(filter-out src/main.o, $(OBJS)) \
 	$(PROTO_OBJS) \
 	$(CXXFLAGS) \
 	-shared

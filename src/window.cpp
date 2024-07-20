@@ -1,6 +1,7 @@
 #include "window.hpp"
 #include "css.hpp"
 #include "config.hpp"
+#include "config_parser.hpp"
 #include "auth.hpp"
 
 #include <gtk4-layer-shell.h>
@@ -19,6 +20,19 @@ syslock::syslock(const config_lock &cfg) {
 	set_default_size(640, 480);
 	set_hide_on_close(true);
 
+	// Load the config
+	#ifdef CONFIG_FILE
+	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
+
+	std::string cfg_time_format = config.get_value("clock", "time-format");
+	if (cfg_time_format != "empty")
+		time_format = cfg_time_format;
+
+	std::string cfg_date_format = config.get_value("clock", "date-format");
+	if (cfg_date_format != "empty")
+		date_format = cfg_date_format;
+	#endif
+
 	// Set up drag gestures
 	gesture_drag = Gtk::GestureDrag::create();
 	gesture_drag->signal_drag_begin().connect(sigc::mem_fun(*this, &syslock::on_drag_start));
@@ -33,8 +47,8 @@ syslock::syslock(const config_lock &cfg) {
 
 	// TODO: Add a config option to select what appears on the lockscreen
 	// TODO: Add config options to set custom date & time formats
-	box_lock_screen.append(label_clock);
-	label_clock.get_style_context()->add_class("clock");
+	box_lock_screen.append(label_time);
+	label_time.get_style_context()->add_class("time");
 
 	box_lock_screen.append(label_date);
 	label_date.get_style_context()->add_class("date");
@@ -287,11 +301,11 @@ bool syslock::update_time_date() {
 	std::tm* local_time = std::localtime(&now);
 
 	char time_buffer[32];
-	std::strftime(time_buffer, sizeof(time_buffer), "%H:%M", local_time);
-	label_clock.set_text(time_buffer);
+	std::strftime(time_buffer, sizeof(time_buffer), time_format.c_str(), local_time);
+	label_time.set_text(time_buffer);
 
 	char date_buffer[32];
-	std::strftime(date_buffer, sizeof(date_buffer), "%a %d %b", local_time);
+	std::strftime(date_buffer, sizeof(date_buffer), date_format.c_str(), local_time);
 	label_date.set_text(date_buffer);
 	return true;
 }

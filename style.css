@@ -8,7 +8,7 @@
 #syslock .lock_screen {
 }
 
-#syslock .clock {
+#syslock .time {
 	margin-top: 200px;
 	font-size: 96px;
 }
