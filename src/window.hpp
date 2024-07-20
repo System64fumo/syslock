@@ -39,8 +39,9 @@ class syslock : public Gtk::Window {
 		std::string date_format = "%a %d %b";
 
 		Gtk::Image image_profile;
+		std::string profile_picture_path = "";
 		int profile_scale = 128;
-		int profile_rounding = -1;
+		int profile_rounding = 64;
 
 		Gtk::Label label_username;
 		Gtk::Label label_error;
