@@ -24,6 +24,14 @@ syslock::syslock(const config_lock &cfg) {
 	#ifdef CONFIG_FILE
 	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
 
+	std::string cfg_profile_scale = config.get_value("profile", "scale");
+	if (cfg_profile_scale != "empty")
+		profile_scale = std::stoi(cfg_profile_scale);
+
+	std::string cfg_profile_rounding = config.get_value("profile", "rounding");
+	if (cfg_profile_rounding != "empty")
+		profile_rounding = std::stoi(cfg_profile_rounding);
+
 	std::string cfg_time_format = config.get_value("clock", "time-format");
 	if (cfg_time_format != "empty")
 		time_format = cfg_time_format;
@@ -46,7 +54,6 @@ syslock::syslock(const config_lock &cfg) {
 	box_lock_screen.property_orientation().set_value(Gtk::Orientation::VERTICAL);
 
 	// TODO: Add a config option to select what appears on the lockscreen
-	// TODO: Add config options to set custom date & time formats
 	box_lock_screen.append(label_time);
 	label_time.get_style_context()->add_class("time");
 
@@ -56,8 +63,6 @@ syslock::syslock(const config_lock &cfg) {
 	Glib::signal_timeout().connect(sigc::mem_fun(*this, &syslock::update_time_date), 1000);
 	update_time_date();
 
-	// TODO: Add an on entry change event to show the login screen.
-	// TODO: Add a timeout event to hide the login screen. (Also clean the password box)
 	overlay.add_overlay(box_layout);
 	box_layout.append(scrolled_window);
 	box_layout.get_style_context()->add_class("login_screen");
@@ -76,17 +81,19 @@ syslock::syslock(const config_lock &cfg) {
 	// TODO: Clean this whole mess up
 	// And add a way to enable/disable specific features (PFP, Username, Ect)
 	std::string home_dir = getenv("HOME");
-	if (config_main.profile_scale > 0) {
+	if (profile_scale > 0) {
 		std::string profile_picture = home_dir + "/.face";
 	
 		if (std::filesystem::exists(profile_picture)) {
 			box_login_screen.append(image_profile);
 			image_profile.get_style_context()->add_class("image_profile");
 			auto pixbuf = Gdk::Pixbuf::create_from_file(profile_picture);
-			pixbuf = pixbuf->scale_simple(config_main.profile_scale, config_main.profile_scale, Gdk::InterpType::BILINEAR);
-			// TODO: Add a way to enable/disable rounding the profile picture
-			pixbuf = create_circular_pixbuf(pixbuf, config_main.profile_scale);
-			image_profile.set_size_request(config_main.profile_scale, config_main.profile_scale);
+			pixbuf = pixbuf->scale_simple(profile_scale, profile_scale, Gdk::InterpType::BILINEAR);
+
+			if (profile_rounding != 0)
+				pixbuf = create_rounded_pixbuf(pixbuf, profile_scale, profile_rounding);
+
+			image_profile.set_size_request(profile_scale, profile_scale);
 			image_profile.set(pixbuf);
 			image_profile.set_halign(Gtk::Align::CENTER);
 		}

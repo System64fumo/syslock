@@ -39,10 +39,6 @@ int main(int argc, char* argv[]) {
 	std::string cfg_start_unlocked = config.get_value("main", "start-unlocked");
 	config_main.start_unlocked = (cfg_start_unlocked == "true");
 
-	std::string cfg_profile_scale = config.get_value("main", "profile-scale");
-	if (cfg_profile_scale != "empty")
-		config_main.profile_scale = std::stoi(cfg_profile_scale);
-
 	std::string cfg_keypad = config.get_value("main", "keypad");
 	config_main.keypad_enabled = (cfg_keypad == "true");
 
@@ -60,13 +56,9 @@ int main(int argc, char* argv[]) {
 	// Read launch arguments
 	#ifdef RUNTIME_CONFIG
 	while (true) {
-		switch(getopt(argc, argv, "sp:dkl:dm:ddvh")) {
+		switch(getopt(argc, argv, "skl:dm:ddvh")) {
 			case 's':
 				config_main.start_unlocked=true;
-				continue;
-
-			case 'p':
-				config_main.profile_scale = std::stoi(optarg);
 				continue;
 
 			case 'k':
@@ -96,7 +88,6 @@ int main(int argc, char* argv[]) {
 				std::cout << "  syslock [argument...]:\n" << std::endl;
 				std::cout << "arguments:" << std::endl;
 				std::cout << "  -s	Start unlocked" << std::endl;
-				std::cout << "  -p	Set profile picture size" << std::endl;
 				std::cout << "  -k	Enable the keypad" << std::endl;
 				std::cout << "  -l	Set password length" << std::endl;
 				std::cout << "  -m	Set primary monitor" << std::endl;

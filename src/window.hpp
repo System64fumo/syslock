@@ -39,13 +39,16 @@ class syslock : public Gtk::Window {
 		std::string date_format = "%a %d %b";
 
 		Gtk::Image image_profile;
+		int profile_scale = 128;
+		int profile_rounding = -1;
+
 		Gtk::Label label_username;
 		Gtk::Label label_error;
 		Gtk::Entry entry_password;
 		Glib::RefPtr<Gtk::GestureDrag> gesture_drag;
 		keypad *keypad_main;
 
-		Glib::RefPtr<Gdk::Pixbuf> create_circular_pixbuf(const Glib::RefPtr<Gdk::Pixbuf>& src_pixbuf, int size);
+		Glib::RefPtr<Gdk::Pixbuf> create_rounded_pixbuf(const Glib::RefPtr<Gdk::Pixbuf> &src_pixbuf, const int &size, const int &rounding_radius);
 
 		void on_entry();
 		void on_entry_changed();
