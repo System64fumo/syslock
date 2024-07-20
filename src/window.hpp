@@ -34,6 +34,7 @@ class syslock : public Gtk::Window {
 		Gtk::Overlay overlay;
 
 		Gtk::Label label_clock;
+		Gtk::Label label_date;
 
 		Gtk::Image image_profile;
 		Gtk::Label label_username;
@@ -53,7 +54,7 @@ class syslock : public Gtk::Window {
 		void on_drag_update(const double &x, const double &y);
 		void on_drag_stop(const double &x, const double &y);
 
-		bool update_time();
+		bool update_time_date();
 };
 
 extern "C" {
