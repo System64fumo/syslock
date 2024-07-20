@@ -24,6 +24,10 @@ syslock::syslock(const config_lock &cfg) {
 	#ifdef CONFIG_FILE
 	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
 
+	std::string cfg_profile_path = config.get_value("profile", "image-path");
+	if (cfg_profile_path != "empty")
+		profile_picture_path = cfg_profile_path;
+
 	std::string cfg_profile_scale = config.get_value("profile", "scale");
 	if (cfg_profile_scale != "empty")
 		profile_scale = std::stoi(cfg_profile_scale);
@@ -78,25 +82,25 @@ syslock::syslock(const config_lock &cfg) {
 	box_login_screen.set_valign(Gtk::Align::CENTER);
 	box_login_screen.set_vexpand(true);
 
-	// TODO: Clean this whole mess up
 	// And add a way to enable/disable specific features (PFP, Username, Ect)
+
 	std::string home_dir = getenv("HOME");
-	if (profile_scale > 0) {
-		std::string profile_picture = home_dir + "/.face";
-	
-		if (std::filesystem::exists(profile_picture)) {
-			box_login_screen.append(image_profile);
-			image_profile.get_style_context()->add_class("image_profile");
-			auto pixbuf = Gdk::Pixbuf::create_from_file(profile_picture);
-			pixbuf = pixbuf->scale_simple(profile_scale, profile_scale, Gdk::InterpType::BILINEAR);
+	if (profile_picture_path == "")
+		profile_picture_path = home_dir + "/.face";
 
-			if (profile_rounding != 0)
-				pixbuf = create_rounded_pixbuf(pixbuf, profile_scale, profile_rounding);
+	if (std::filesystem::exists(profile_picture_path) && profile_scale > 0) {
+		box_login_screen.append(image_profile);
+		image_profile.get_style_context()->add_class("image_profile");
+		auto pixbuf = Gdk::Pixbuf::create_from_file(profile_picture_path);
+		pixbuf = pixbuf->scale_simple(profile_scale, profile_scale, Gdk::InterpType::BILINEAR);
 
-			image_profile.set_size_request(profile_scale, profile_scale);
-			image_profile.set(pixbuf);
-			image_profile.set_halign(Gtk::Align::CENTER);
-		}
+		// Round the image
+		if (profile_rounding != 0)
+			pixbuf = create_rounded_pixbuf(pixbuf, profile_scale, profile_rounding);
+
+		image_profile.set_size_request(profile_scale, profile_scale);
+		image_profile.set(pixbuf);
+		image_profile.set_halign(Gtk::Align::CENTER);
 	}
 
 	box_login_screen.append(label_username);
