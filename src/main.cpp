@@ -36,19 +36,23 @@ int main(int argc, char* argv[]) {
 	#ifdef CONFIG_FILE
 	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
 
-	std::string cfg_start_unlocked = config.get_value("main", "start-unlocked");
-	config_main.start_unlocked = (cfg_start_unlocked == "true");
+	if (config.available) {
+		std::string cfg_start_unlocked = config.get_value("main", "start-unlocked");
+		if (cfg_start_unlocked != "empty")
+			config_main.start_unlocked = (cfg_start_unlocked == "true");
 
-	std::string cfg_keypad = config.get_value("main", "keypad");
-	config_main.keypad_enabled = (cfg_keypad == "true");
+		std::string cfg_keypad = config.get_value("main", "keypad");
+		if (cfg_keypad != "empty")
+			config_main.keypad_enabled = (cfg_keypad == "true");
 
-	std::string cfg_pw_length = config.get_value("main", "password-length");
-	if (cfg_pw_length != "empty")
-		config_main.pw_length = std::stoi(cfg_pw_length);
+		std::string cfg_pw_length = config.get_value("main", "password-length");
+		if (cfg_pw_length != "empty")
+			config_main.pw_length = std::stoi(cfg_pw_length);
 
-	std::string cfg_main_monitor = config.get_value("main", "main-monitor");
-	if (cfg_main_monitor != "empty")
-		config_main.main_monitor = std::stoi(cfg_main_monitor);
+		std::string cfg_main_monitor = config.get_value("main", "main-monitor");
+		if (cfg_main_monitor != "empty")
+			config_main.main_monitor = std::stoi(cfg_main_monitor);
+	}
 
 	// Debug doesn't need a config entry
 	#endif
