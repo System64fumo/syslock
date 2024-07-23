@@ -11,6 +11,7 @@
 #include <gdkmm/general.h>
 
 #include "config.hpp"
+#include "config_parser.hpp"
 #include "keypad.hpp"
 #include "tap_to_wake.hpp"
 
@@ -27,6 +28,13 @@ class syslock : public Gtk::Window {
 		double window_height;
 		int start_height;
 		sigc::connection connection;
+
+		#ifdef CONFIG_FILE
+		config_parser *config;
+		#endif
+
+		std::string lock_cmd = "";
+		std::string unlock_cmd = "";
 
 		Gtk::Box box_lock_screen;
 		Gtk::Box box_login_screen;

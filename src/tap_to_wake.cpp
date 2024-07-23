@@ -23,6 +23,10 @@ tap_to_wake::tap_to_wake() {
 	std::string cfg_timeout = config.get_value("tap-to-wake", "timeout");
 	if (cfg_timeout != "empty")
 		timeout = std::stoi(cfg_timeout);
+
+	std::string cfg_tap_cmd = config.get_value("events", "on-tap-cmd");
+	if (cfg_tap_cmd != "empty")
+		tap_cmd = cfg_tap_cmd;
 	#endif
 }
 
@@ -31,6 +35,10 @@ tap_to_wake::~tap_to_wake() {
 }
 
 void tap_to_wake::start_listener() {
+	// Set up the device ya dingus
+	if (device_path == "/dev/input/by-path/SET-ME-UP")
+		return;
+
 	// Prevent starting another thread if already running
 	if (thread_tap_listener.joinable())
 		return;
@@ -95,9 +103,14 @@ void tap_to_wake::start_listener() {
 							} else {
 								long stop_timestamp = ev.time.tv_sec * 1000000;
 								stop_timestamp += ev.time.tv_usec;
-								if (stop_timestamp - start_timestamp < timeout * 1000)
-									std::cout << "Screen tapped within " << timeout << "ms" << std::endl;
-								// TODO: Run a user defined command here
+								if (stop_timestamp - start_timestamp < timeout * 1000) {
+									if (tap_cmd != "") {
+										std::thread thread_cmd([this](){
+											system(tap_cmd.c_str());
+										});
+										thread_cmd.detach();
+									}
+								}
 							}
 						}
 					} else if (rc != -EAGAIN) {

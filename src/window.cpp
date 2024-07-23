@@ -1,7 +1,5 @@
 #include "window.hpp"
 #include "css.hpp"
-#include "config.hpp"
-#include "config_parser.hpp"
 #include "auth.hpp"
 
 #include <gtk4-layer-shell.h>
@@ -22,27 +20,35 @@ syslock::syslock(const config_lock &cfg) {
 
 	// Load the config
 	#ifdef CONFIG_FILE
-	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
+	config = new config_parser(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
 
-	std::string cfg_profile_path = config.get_value("profile", "image-path");
+	std::string cfg_profile_path = config->get_value("profile", "image-path");
 	if (cfg_profile_path != "empty")
 		profile_picture_path = cfg_profile_path;
 
-	std::string cfg_profile_scale = config.get_value("profile", "scale");
+	std::string cfg_profile_scale = config->get_value("profile", "scale");
 	if (cfg_profile_scale != "empty")
 		profile_scale = std::stoi(cfg_profile_scale);
 
-	std::string cfg_profile_rounding = config.get_value("profile", "rounding");
+	std::string cfg_profile_rounding = config->get_value("profile", "rounding");
 	if (cfg_profile_rounding != "empty")
 		profile_rounding = std::stoi(cfg_profile_rounding);
 
-	std::string cfg_time_format = config.get_value("clock", "time-format");
+	std::string cfg_time_format = config->get_value("clock", "time-format");
 	if (cfg_time_format != "empty")
 		time_format = cfg_time_format;
 
-	std::string cfg_date_format = config.get_value("clock", "date-format");
+	std::string cfg_date_format = config->get_value("clock", "date-format");
 	if (cfg_date_format != "empty")
 		date_format = cfg_date_format;
+
+	std::string cfg_event_lock = config->get_value("events", "on-lock-cmd");
+	if (cfg_event_lock != "empty")
+		lock_cmd = cfg_event_lock;
+
+	std::string cfg_event_unlock = config->get_value("events", "on-unlock-cmd");
+	if (cfg_event_unlock != "empty")
+		unlock_cmd = cfg_event_unlock;
 	#endif
 
 	// Set up drag gestures
@@ -144,7 +150,6 @@ syslock::syslock(const config_lock &cfg) {
 	// TODO: Basic implementation done, Now make this actually do something useful.
 	#ifdef FEATURE_TAP_TO_WAKE
 	listener = new tap_to_wake();
-	listener->start_listener();
 	#endif
 
 	// Load custom css
@@ -162,6 +167,7 @@ syslock::syslock(const config_lock &cfg) {
 	});
 
 	show_windows();
+	lock();
 }
 
 // TODO: Make this non blocking
@@ -195,6 +201,14 @@ void syslock::on_entry() {
 				window->hide();
 			}
 			entry_password.set_text("");
+			connection.disconnect();
+
+			if (unlock_cmd != "") {
+				std::thread thread_cmd([this](){
+					system(unlock_cmd.c_str());
+				});
+				thread_cmd.detach();
+			}
 			return false;
 		}, 250);
 	}
@@ -337,6 +351,13 @@ void syslock::lock() {
 	scrolled_window.set_valign(Gtk::Align::END);
 	box_layout.set_opacity(0);
 	scrolled_window.set_size_request(-1, -1);
+
+	if (lock_cmd != "") {
+		std::thread thread_cmd([this](){
+			system(lock_cmd.c_str());
+		});
+		thread_cmd.detach();
+	}
 
 	#ifdef FEATURE_TAP_TO_WAKE
 	listener->start_listener();
