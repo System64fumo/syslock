@@ -1,4 +1,6 @@
 #include "tap_to_wake.hpp"
+#include "config.hpp"
+#include "config_parser.hpp"
 
 #include <iostream>
 #include <fcntl.h>
@@ -7,7 +9,24 @@
 #include <cstring>
 #include <sys/select.h>
 
-tap_to_wake::tap_to_wake() {}
+tap_to_wake::tap_to_wake() {
+	#ifdef CONFIG_FILE
+	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
+
+	std::string cfg_device_path = config.get_value("tap-to-wake", "device-path");
+	if (cfg_device_path != "empty")
+		device_path = cfg_device_path;
+
+	std::string cfg_verbose = config.get_value("tap-to-wake", "verbose");
+	if (cfg_verbose != "empty")
+		verbose = (cfg_verbose == "true");
+
+	std::string cfg_timeout = config.get_value("tap-to-wake", "timeout");
+	if (cfg_timeout != "empty")
+		timeout = std::stoi(cfg_timeout);
+	#endif
+}
+
 tap_to_wake::~tap_to_wake() {
 	stop_listener();
 }
@@ -60,22 +79,25 @@ void tap_to_wake::start_listener() {
 					rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
 
 					if (rc == 0) {
-						if (ev.type == 3 && ev.code == 57) {
-							if (verbose) {
-								std::cout << "Event: time " << ev.time.tv_sec << "." << ev.time.tv_usec
-										  << ", type " << ev.type
-										  << ", code " << ev.code
-										  << ", value " << ev.value << std::endl;
-							}
+						// This should probably go..
+						// Not that helpful
+						if (verbose) {
+							std::cout << "Event: time " << ev.time.tv_sec << "." << ev.time.tv_usec
+									  << ", type " << ev.type
+									  << ", code " << ev.code
+									  << ", value " << ev.value << std::endl;
+							usleep(10 * 1000); // Sleep for 10ms
+						}
 
+						if (ev.type == 3 && ev.code == 57) {
 							if (ev.value != -1) {
 								start_timestamp = ev.time.tv_sec * 1000000;
 								start_timestamp += ev.time.tv_usec;
 							} else {
 								long stop_timestamp = ev.time.tv_sec * 1000000;
 								stop_timestamp += ev.time.tv_usec;
-								if (stop_timestamp - start_timestamp < 500000)
-									std::cout << "Screen tapped within 500ms" << std::endl;
+								if (stop_timestamp - start_timestamp < timeout * 1000)
+									std::cout << "Screen tapped within " << timeout << "ms" << std::endl;
 								// TODO: Run a user defined command here
 							}
 						}
