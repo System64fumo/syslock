@@ -3,6 +3,7 @@
 #include "config.hpp"
 #include "config_parser.hpp"
 #include "auth.hpp"
+#include "tap_to_wake.hpp"
 
 #include <gtk4-layer-shell.h>
 #include <iostream>
@@ -10,6 +11,7 @@
 #include <pwd.h>
 #include <glibmm/main.h>
 #include <ctime>
+#include <thread>
 
 syslock::syslock(const config_lock &cfg) {
 	config_main = cfg;
@@ -139,6 +141,14 @@ syslock::syslock(const config_lock &cfg) {
 		keypad_main = Gtk::make_managed<keypad>(entry_password, std::bind(&syslock::on_entry, this));
 		box_login_screen.append(*keypad_main);
 	}
+
+	// Tap to wake
+	// TODO: Basic implementation done, Now make this actually do something useful.
+	// TODO: Add compile option to ommit this
+	/*std::thread thread_tap_listener([this](){
+		tap_to_wake *listener = new tap_to_wake();
+	});
+	thread_tap_listener.detach();*/
 
 	// Load custom css
 	std::string css_path = home_dir + "/.config/sys64/lock/style.css";

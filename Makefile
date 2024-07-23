@@ -1,6 +1,6 @@
 EXEC = syslock
 LIB = libsyslock.so
-PKGS = gtkmm-4.0 gtk4-layer-shell-0 pam wayland-client
+PKGS = gtkmm-4.0 gtk4-layer-shell-0 pam wayland-client libevdev
 SRCS =	$(wildcard src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DESTDIR = $(HOME)/.local
@@ -39,7 +39,7 @@ $(EXEC): src/main.o src/config_parser.o src/git_info.hpp
 	$(CXXFLAGS) \
 	$(LDFLAGS)
 
-$(LIB): $(OBJS) $(PROTO_OBJS)
+$(LIB): $(PROTO_OBJS) $(OBJS)
 	$(CXX) -o $(LIB) \
 	$(filter-out src/main.o, $(OBJS)) \
 	$(PROTO_OBJS) \
