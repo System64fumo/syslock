@@ -17,9 +17,10 @@ class tap_to_wake {
 		int rc;
 		struct libevdev *dev = nullptr;
 		std::jthread thread_tap_listener;
-
-		// TODO: Add option to set custom device paths
-		std::string device_path = "/dev/input/by-path/platform-a90000.i2c-event";
 		long start_timestamp = 0;
+
+		// Configs
+		std::string device_path = "/dev/input/by-path/SET-ME-UP";
 		bool verbose = false;
+		int timeout = 500;
 };
