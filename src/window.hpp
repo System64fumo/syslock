@@ -50,7 +50,9 @@ class syslock : public Gtk::Window {
 		Glib::RefPtr<Gtk::GestureDrag> gesture_drag;
 		keypad *keypad_main;
 
+		#ifdef FEATURE_TAP_TO_WAKE
 		tap_to_wake *listener;
+		#endif
 
 		Glib::RefPtr<Gdk::Pixbuf> create_rounded_pixbuf(const Glib::RefPtr<Gdk::Pixbuf> &src_pixbuf, const int &size, const int &rounding_radius);
 

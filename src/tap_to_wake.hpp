@@ -1,4 +1,7 @@
 #pragma once
+#include "config.hpp"
+#ifdef FEATURE_TAP_TO_WAKE
+
 #include <string>
 #include <libevdev-1.0/libevdev/libevdev.h>
 #include <thread>
@@ -24,3 +27,5 @@ class tap_to_wake {
 		bool verbose = false;
 		int timeout = 500;
 };
+
+#endif

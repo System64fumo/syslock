@@ -142,9 +142,10 @@ syslock::syslock(const config_lock &cfg) {
 
 	// Tap to wake
 	// TODO: Basic implementation done, Now make this actually do something useful.
-	// TODO: Add compile option to ommit this
+	#ifdef FEATURE_TAP_TO_WAKE
 	listener = new tap_to_wake();
 	listener->start_listener();
+	#endif
 
 	// Load custom css
 	std::string css_path = home_dir + "/.config/sys64/lock/style.css";
@@ -175,7 +176,9 @@ void syslock::on_entry() {
 		std::cout << "Authentication successful" << std::endl;
 		//unlock_session();
 
+		#ifdef FEATURE_TAP_TO_WAKE
 		listener->stop_listener();
+		#endif
 
 		// Add a delay for fancy css animations
 		for (std::vector<Gtk::Window*>::iterator it = windows.begin(); it != windows.end(); ++it) {
@@ -335,7 +338,9 @@ void syslock::lock() {
 	box_layout.set_opacity(0);
 	scrolled_window.set_size_request(-1, -1);
 
+	#ifdef FEATURE_TAP_TO_WAKE
 	listener->start_listener();
+	#endif
 }
 
 extern "C" {
