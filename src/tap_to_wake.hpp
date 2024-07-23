@@ -26,6 +26,7 @@ class tap_to_wake {
 		std::string device_path = "/dev/input/by-path/SET-ME-UP";
 		bool verbose = false;
 		int timeout = 500;
+		std::string tap_cmd = "";
 };
 
 #endif
