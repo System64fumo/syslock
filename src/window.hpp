@@ -12,6 +12,7 @@
 
 #include "config.hpp"
 #include "keypad.hpp"
+#include "tap_to_wake.hpp"
 
 class syslock : public Gtk::Window {
 
@@ -48,6 +49,8 @@ class syslock : public Gtk::Window {
 		Gtk::Entry entry_password;
 		Glib::RefPtr<Gtk::GestureDrag> gesture_drag;
 		keypad *keypad_main;
+
+		tap_to_wake *listener;
 
 		Glib::RefPtr<Gdk::Pixbuf> create_rounded_pixbuf(const Glib::RefPtr<Gdk::Pixbuf> &src_pixbuf, const int &size, const int &rounding_radius);
 

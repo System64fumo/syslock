@@ -3,7 +3,6 @@
 #include "config.hpp"
 #include "config_parser.hpp"
 #include "auth.hpp"
-#include "tap_to_wake.hpp"
 
 #include <gtk4-layer-shell.h>
 #include <iostream>
@@ -11,7 +10,6 @@
 #include <pwd.h>
 #include <glibmm/main.h>
 #include <ctime>
-#include <thread>
 
 syslock::syslock(const config_lock &cfg) {
 	config_main = cfg;
@@ -145,10 +143,8 @@ syslock::syslock(const config_lock &cfg) {
 	// Tap to wake
 	// TODO: Basic implementation done, Now make this actually do something useful.
 	// TODO: Add compile option to ommit this
-	/*std::thread thread_tap_listener([this](){
-		tap_to_wake *listener = new tap_to_wake();
-	});
-	thread_tap_listener.detach();*/
+	listener = new tap_to_wake();
+	listener->start_listener();
 
 	// Load custom css
 	std::string css_path = home_dir + "/.config/sys64/lock/style.css";
@@ -179,12 +175,15 @@ void syslock::on_entry() {
 		std::cout << "Authentication successful" << std::endl;
 		//unlock_session();
 
+		listener->stop_listener();
+
 		// Add a delay for fancy css animations
 		for (std::vector<Gtk::Window*>::iterator it = windows.begin(); it != windows.end(); ++it) {
 			Gtk::Window* window = *it;
 			window->get_style_context()->remove_class("locked");
 			window->get_style_context()->add_class("unlocked");
 		}
+
 		Glib::signal_timeout().connect([this]() {
 			for (std::vector<Gtk::Window*>::iterator it = windows.begin(); it != windows.end(); ++it) {
 				Gtk::Window* window = *it;
@@ -335,6 +334,8 @@ void syslock::lock() {
 	scrolled_window.set_valign(Gtk::Align::END);
 	box_layout.set_opacity(0);
 	scrolled_window.set_size_request(-1, -1);
+
+	listener->start_listener();
 }
 
 extern "C" {
