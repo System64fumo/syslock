@@ -1,13 +1,10 @@
 EXEC = syslock
 LIB = libsyslock.so
-PKGS = gtkmm-4.0 gtk4-layer-shell-0 pam wayland-client libevdev
-SRCS =	$(wildcard src/*.cpp)
-OBJS = $(SRCS:.cpp=.o)
+PKGS = gtkmm-4.0 gtk4-layer-shell-0 pam wayland-client
+SRCS =	$(filter-out src/tap_to_wake.cpp, $(wildcard src/*.cpp))
 DESTDIR = $(HOME)/.local
 
-CXXFLAGS = -march=native -mtune=native -Os -s -Wall -flto=auto -fno-exceptions -fPIC -std=c++20
-CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
-LDFLAGS = $(shell pkg-config --libs $(PKGS))
+CXXFLAGS = -march=native -mtune=native -Os -s -Wall -flto=auto -fno-exceptions -fPIC
 
 PROTOS = ext-session-lock-v1
 PROTO_DIR = /usr/share/wayland-protocols/staging/ext-session-lock
@@ -15,6 +12,17 @@ PROTO_DIR = /usr/share/wayland-protocols/staging/ext-session-lock
 PROTO_HDRS = $(addprefix src/, $(addsuffix .h, $(notdir $(PROTOS))))
 PROTO_SRCS = $(addprefix src/, $(addsuffix .c, $(notdir $(PROTOS))))
 PROTO_OBJS = $(PROTO_SRCS:.c=.o)
+
+# Features
+ifneq (, $(shell grep -E '^#define FEATURE_TAP_TO_WAKE' src/config.hpp))
+	SRCS += src/tap_to_wake.cpp
+	PKGS += libevdev
+	CXXFLAGS += -std=c++20
+endif
+
+OBJS = $(SRCS:.cpp=.o)
+CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
+LDFLAGS = $(shell pkg-config --libs $(PKGS))
 
 all: $(EXEC) $(LIB)
 

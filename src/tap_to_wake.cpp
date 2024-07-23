@@ -1,5 +1,4 @@
 #include "tap_to_wake.hpp"
-#include "config.hpp"
 #include "config_parser.hpp"
 
 #include <iostream>
