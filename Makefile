@@ -5,7 +5,7 @@ SRCS =	$(wildcard src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DESTDIR = $(HOME)/.local
 
-CXXFLAGS = -march=native -mtune=native -Os -s -Wall -flto=auto -fno-exceptions -fPIC
+CXXFLAGS = -march=native -mtune=native -Os -s -Wall -flto=auto -fno-exceptions -fPIC -std=c++20
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
 LDFLAGS = $(shell pkg-config --libs $(PKGS))
 
