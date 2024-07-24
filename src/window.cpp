@@ -315,10 +315,18 @@ void syslock::on_drag_start(const double &x, const double &y) {
 }
 
 void syslock::on_drag_update(const double &x, const double &y) {
-	if (start_height < 100)
+
+	if (start_height < 100) {
+		if (scrolled_window.get_height() >= window_height)
+			return;
 		scrolled_window.set_size_request(-1, -y);
-	else
+	}
+	else {
+		if (-y > 0)
+			return;
 		scrolled_window.set_size_request(-1, start_height - y);
+	}
+
 	box_layout.set_opacity(scrolled_window.get_height() / window_height);
 }
 
