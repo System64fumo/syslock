@@ -21,6 +21,7 @@ class tap_to_wake {
 		struct libevdev *dev = nullptr;
 		std::jthread thread_tap_listener;
 		long start_timestamp = 0;
+		bool running;
 
 		// Configs
 		std::string device_path = "/dev/input/by-path/SET-ME-UP";

@@ -16,8 +16,10 @@ keypad::keypad(Gtk::Entry &entry, const std::function<void()> &enter_func) : Gtk
 		child.set_size_request(100, 100);
 		child.set_child(*button);
 
+		button->set_can_focus(false);
 		button->signal_clicked().connect([&entry, i]() {
 			entry.set_text(entry.get_text() + std::to_string(i));
+			entry.set_position(-1);
 		});
 	}
 
@@ -28,6 +30,7 @@ keypad::keypad(Gtk::Entry &entry, const std::function<void()> &enter_func) : Gtk
 	child_enter.set_size_request(100, 100);
 	child_enter.set_child(*button_enter);
 
+	button_enter->set_can_focus(false);
 	button_enter->signal_clicked().connect([&entry, enter_func]() {
 		enter_func();
 	});
@@ -38,8 +41,10 @@ keypad::keypad(Gtk::Entry &entry, const std::function<void()> &enter_func) : Gtk
 	child_zero.set_size_request(100, 100);
 	child_zero.set_child(*button_zero);
 
+	button_zero->set_can_focus(false);
 	button_zero->signal_clicked().connect([&entry]() {
 		entry.set_text(entry.get_text() + "0");
+		entry.set_position(-1);
 	});
 
 	Gtk::FlowBoxChild child_delete;
@@ -49,9 +54,10 @@ keypad::keypad(Gtk::Entry &entry, const std::function<void()> &enter_func) : Gtk
 	child_delete.set_size_request(100, 100);
 	child_delete.set_child(*button_delete);
 
+	button_delete->set_can_focus(false);
 	button_delete->signal_clicked().connect([&entry]() {
 		if (entry.get_text().length() > 0)
 			entry.set_text(entry.get_text().substr(1));
+		entry.set_position(-1);
 	});
-
 }

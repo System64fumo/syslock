@@ -40,8 +40,10 @@ void tap_to_wake::start_listener() {
 		return;
 
 	// Prevent starting another thread if already running
-	if (thread_tap_listener.joinable())
+	if (running)
 		return;
+
+	running = true;
 
 	// Setup
 	fd = open(device_path.c_str(), O_RDONLY|O_NONBLOCK);
@@ -135,4 +137,5 @@ void tap_to_wake::stop_listener() {
 	write(pipefd[1], "x", 1);
 	libevdev_free(dev);
 	close(fd);
+	running = false;
 }

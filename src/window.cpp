@@ -120,15 +120,22 @@ syslock::syslock(const config_lock &cfg) {
 	entry_password.set_size_request(250, 30);
 	entry_password.set_halign(Gtk::Align::CENTER);
 	entry_password.set_visibility(false);
+	entry_password.set_input_purpose(Gtk::InputPurpose::PASSWORD);
 	entry_password.signal_activate().connect(sigc::mem_fun(*this, &syslock::on_entry));
 	entry_password.signal_changed().connect(sigc::mem_fun(*this, &syslock::on_entry_changed));
 	entry_password.grab_focus();
 	entry_password.signal_changed().connect([&]() {
+		if (entry_password.get_text() == "")
+			return;
+
 		scrolled_window.set_valign(Gtk::Align::FILL);
 		box_layout.set_opacity(1);
 		scrolled_window.set_size_request(-1, get_height());
 		connection.disconnect();
-		connection = Glib::signal_timeout().connect([&]() {lock();return false;}, 10 * 1000);
+		connection = Glib::signal_timeout().connect([&]() {
+			lock();
+			return false;
+		}, 10 * 1000);
 	});
 
 	// TODO: add remaining tries left
@@ -147,7 +154,6 @@ syslock::syslock(const config_lock &cfg) {
 	}
 
 	// Tap to wake
-	// TODO: Basic implementation done, Now make this actually do something useful.
 	#ifdef FEATURE_TAP_TO_WAKE
 	listener = new tap_to_wake();
 	#endif
@@ -156,8 +162,7 @@ syslock::syslock(const config_lock &cfg) {
 	std::string css_path = home_dir + "/.config/sys64/lock/style.css";
 	css_loader css(css_path, this);
 
-	// This is stupid
-	// WHY?
+	// Set classes properly (No clue why this has to be done this way, Don't question it)
 	signal_map().connect([this] () {
 		get_style_context()->remove_class("locked");
 		Glib::signal_timeout().connect([this]() {
@@ -351,6 +356,7 @@ void syslock::lock() {
 	scrolled_window.set_valign(Gtk::Align::END);
 	box_layout.set_opacity(0);
 	scrolled_window.set_size_request(-1, -1);
+	entry_password.set_text("");
 
 	if (lock_cmd != "") {
 		std::thread thread_cmd([this](){
