@@ -40,7 +40,7 @@ clean:
 		$(PROTO_SRCS) \
 		$(PROTO_HDRS)
 
-$(EXEC): src/main.o src/config_parser.o src/git_info.hpp
+$(EXEC): src/git_info.hpp src/main.o src/config_parser.o
 	$(CXX) -o $(EXEC) \
 	src/main.o \
 	src/config_parser.o \
