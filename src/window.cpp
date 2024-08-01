@@ -144,9 +144,6 @@ syslock::syslock(const config_lock &cfg) {
 	label_error.set_text("Incorrect password");
 	label_error.hide();
 
-	// TODO: Figure out why ext session lock causes hyprland to red screen
-	//lock_session(*this);
-
 	// Keypad
 	if (config_main.keypad_enabled) {
 		keypad_main = Gtk::make_managed<keypad>(entry_password, std::bind(&syslock::on_entry, this));
@@ -169,6 +166,10 @@ syslock::syslock(const config_lock &cfg) {
 			get_style_context()->add_class("locked");
 			return false;
 		}, 100);
+		// TODO: This is unstable, Sometimes it works sometimes it doesn't
+		// Figure out why it's like this somehow.
+		// Also for some reason this causes the window to show twice?
+		//lock_session(this);
 	});
 
 	show_windows();
