@@ -1,10 +1,8 @@
 EXEC = syslock
 LIB = libsyslock.so
 PKGS = gtkmm-4.0 gtk4-layer-shell-0 pam wayland-client
-SRCS =	$(filter-out src/tap_to_wake.cpp, $(wildcard src/*.cpp))
+SRCS = $(filter-out src/tap_to_wake.cpp, $(wildcard src/*.cpp))
 DESTDIR = $(HOME)/.local
-
-CXXFLAGS = -march=native -mtune=native -Os -s -Wall -flto=auto -fno-exceptions -fPIC
 
 PROTOS = ext-session-lock-v1
 PROTO_DIR = /usr/share/wayland-protocols/staging/ext-session-lock
@@ -21,8 +19,13 @@ ifneq (, $(shell grep -E '^#define FEATURE_TAP_TO_WAKE' src/config.hpp))
 endif
 
 OBJS = $(SRCS:.cpp=.o)
+
+
+CXXFLAGS += -Os -s -Wall -flto=auto -fno-exceptions -fPIC
+LDFLAGS += -Wl,-O1,--as-needed,-z,now,-z,pack-relative-relocs
+
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
-LDFLAGS = $(shell pkg-config --libs $(PKGS))
+LDFLAGS += $(shell pkg-config --libs $(PKGS))
 
 all: $(EXEC) $(LIB)
 
@@ -45,13 +48,14 @@ $(EXEC): src/git_info.hpp src/main.o src/config_parser.o
 	src/main.o \
 	src/config_parser.o \
 	$(CXXFLAGS) \
-	$(LDFLAGS)
+	$(shell pkg-config --libs gtkmm-4.0 gtk4-layer-shell-0)
 
 $(LIB): $(PROTO_OBJS) $(OBJS)
 	$(CXX) -o $(LIB) \
 	$(filter-out src/main.o, $(OBJS)) \
 	$(PROTO_OBJS) \
 	$(CXXFLAGS) \
+	$(LDFLAGS) \
 	-shared
 
 %.o: %.cpp
