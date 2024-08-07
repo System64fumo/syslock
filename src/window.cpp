@@ -148,6 +148,7 @@ syslock::syslock(const config_lock &cfg) {
 	if (config_main.keypad_enabled) {
 		keypad_main = Gtk::make_managed<keypad>(entry_password, std::bind(&syslock::on_entry, this));
 		box_login_screen.append(*keypad_main);
+		entry_password.set_input_purpose(Gtk::InputPurpose::PIN);
 	}
 
 	// Tap to wake
