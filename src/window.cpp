@@ -182,6 +182,14 @@ syslock::syslock(const config_lock &cfg) {
 void syslock::auth_start() {
 	label_error.hide();
 	std::string password = entry_password.get_buffer()->get_text().raw();
+
+	// Remove focus
+	Gtk::Button focus_dummy;
+	box_layout.append(focus_dummy);
+	focus_dummy.grab_focus();
+	entry_password.set_sensitive(false);
+	box_layout.remove(focus_dummy);
+
 	std::thread thread_auth([&, password]() {
 		char *user = getenv("USER");
 		auth = authenticate(user, password.c_str());
@@ -231,6 +239,7 @@ void syslock::auth_end() {
 		entry_password.set_text("");
 		label_error.show();
 	}
+	entry_password.set_sensitive(true);
 }
 
 void syslock::on_entry_changed() {
