@@ -121,7 +121,7 @@ syslock::syslock(const config_lock &cfg) {
 	entry_password.set_halign(Gtk::Align::CENTER);
 	entry_password.set_visibility(false);
 	entry_password.set_input_purpose(Gtk::InputPurpose::PASSWORD);
-	entry_password.signal_activate().connect(sigc::mem_fun(*this, &syslock::on_entry));
+	entry_password.signal_activate().connect(sigc::mem_fun(*this, &syslock::auth_start));
 	entry_password.signal_changed().connect(sigc::mem_fun(*this, &syslock::on_entry_changed));
 	entry_password.grab_focus();
 	entry_password.signal_changed().connect([&]() {
@@ -138,6 +138,8 @@ syslock::syslock(const config_lock &cfg) {
 		}, 10 * 1000);
 	});
 
+	dispatcher_auth.connect(sigc::mem_fun(*this, &syslock::auth_end));
+
 	// TODO: add remaining tries left
 	box_login_screen.append(label_error);
 	label_error.get_style_context()->add_class("label_error");
@@ -146,7 +148,7 @@ syslock::syslock(const config_lock &cfg) {
 
 	// Keypad
 	if (config_main.keypad_enabled) {
-		keypad_main = Gtk::make_managed<keypad>(entry_password, std::bind(&syslock::on_entry, this));
+		keypad_main = Gtk::make_managed<keypad>(entry_password, sigc::mem_fun(*this, &syslock::auth_start));
 		box_login_screen.append(*keypad_main);
 		entry_password.set_input_purpose(Gtk::InputPurpose::PIN);
 	}
@@ -177,14 +179,18 @@ syslock::syslock(const config_lock &cfg) {
 	lock();
 }
 
-// TODO: Make this non blocking
-void syslock::on_entry() {
+void syslock::auth_start() {
 	label_error.hide();
-	char *user = getenv("USER");
 	std::string password = entry_password.get_buffer()->get_text().raw();
-	bool auth = authenticate(user, password.c_str());
-	label_error.hide();
+	std::thread thread_auth([&, password]() {
+		char *user = getenv("USER");
+		auth = authenticate(user, password.c_str());
+		dispatcher_auth.emit();
+	});
+	thread_auth.detach();
+}
 
+void syslock::auth_end() {
 	if (auth) {
 		std::cout << "Authentication successful" << std::endl;
 		//unlock_session();
@@ -230,7 +236,7 @@ void syslock::on_entry() {
 void syslock::on_entry_changed() {
 	// Trigger a password check automatically
 	if ((int)entry_password.get_text().length() == config_main.pw_length) {
-		on_entry();
+		dispatcher_auth.emit();
 	}
 }
 

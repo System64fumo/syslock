@@ -8,6 +8,7 @@
 #include <gtkmm/label.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/gesturedrag.h>
+#include <glibmm/dispatcher.h>
 #include <gdkmm/general.h>
 
 #include "config.hpp"
@@ -27,6 +28,7 @@ class syslock : public Gtk::Window {
 		config_lock config_main;
 		double window_height;
 		int start_height;
+		bool auth;
 		sigc::connection connection;
 
 		#ifdef CONFIG_FILE
@@ -56,7 +58,9 @@ class syslock : public Gtk::Window {
 		Gtk::Label label_error;
 		Gtk::Entry entry_password;
 		Glib::RefPtr<Gtk::GestureDrag> gesture_drag;
+		Glib::Dispatcher dispatcher_auth;
 		keypad *keypad_main;
+		std::thread thread_auth;
 
 		#ifdef FEATURE_TAP_TO_WAKE
 		tap_to_wake *listener;
@@ -64,7 +68,8 @@ class syslock : public Gtk::Window {
 
 		Glib::RefPtr<Gdk::Pixbuf> create_rounded_pixbuf(const Glib::RefPtr<Gdk::Pixbuf> &src_pixbuf, const int &size, const int &rounding_radius);
 
-		void on_entry();
+		void auth_start();
+		void auth_end();
 		void on_entry_changed();
 		void setup_window(GtkWindow *window, GdkMonitor *monitor, const char* name);
 		void show_windows();
