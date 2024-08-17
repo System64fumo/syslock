@@ -1,8 +1,12 @@
-EXEC = syslock
-LIB = libsyslock.so
+BINS = syslock
+LIBS = libsyslock.so
 PKGS = gtkmm-4.0 gtk4-layer-shell-0 pam wayland-client
 SRCS = $(filter-out src/tap_to_wake.cpp, $(wildcard src/*.cpp))
-DESTDIR = $(HOME)/.local
+
+PREFIX ?= /usr/local
+BINDIR ?= $(PREFIX)/bin
+LIBDIR ?= $(PREFIX)/lib
+DATADIR ?= $(PREFIX)/share
 
 PROTOS = ext-session-lock-v1
 PROTO_DIR = /usr/share/wayland-protocols/staging/ext-session-lock
@@ -34,34 +38,34 @@ define progress
 	@printf "[$(JOBS_DONE)/$(shell echo $(JOB_COUNT) | wc -w)] %s %s\n" $(1) $(2)
 endef
 
-all: $(EXEC) $(LIB)
+all: $(BINS) $(LIBS)
 
-install: $(EXEC) $(LIB)
-	mkdir -p $(DESTDIR)/bin $(DESTDIR)/lib
-	install $(EXEC) $(DESTDIR)/bin/$(EXEC)
-	install $(LIB) $(DESTDIR)/lib/$(LIB)
+install: $(all)
+	@echo "Installing..."
+	@install -D -t $(DESTDIR)$(BINDIR) $(BINS)
+	@install -D -t $(DESTDIR)$(LIBDIR) $(LIBS)
 
 clean:
 	@echo "Cleaning up"
-	@rm	$(EXEC) \
-		$(LIB) \
+	@rm	$(BINS) \
+		$(LIBS) \
 		$(OBJS) \
 		src/git_info.hpp \
 		$(PROTO_OBJS) \
 		$(PROTO_SRCS) \
 		$(PROTO_HDRS)
 
-$(EXEC): src/git_info.hpp src/main.o src/config_parser.o
+$(BINS): src/git_info.hpp src/main.o src/config_parser.o
 	$(call progress, Linking $@)
-	@$(CXX) -o $(EXEC) \
+	@$(CXX) -o $(BINS) \
 	src/main.o \
 	src/config_parser.o \
 	$(CXXFLAGS) \
 	$(shell pkg-config --libs gtkmm-4.0 gtk4-layer-shell-0)
 
-$(LIB): $(PROTO_HDRS) $(PROTO_SRCS) $(PROTO_OBJS) $(OBJS)
+$(LIBS): $(PROTO_HDRS) $(PROTO_SRCS) $(PROTO_OBJS) $(OBJS)
 	$(call progress, Linking $@)
-	@$(CXX) -o $(LIB) \
+	@$(CXX) -o $(LIBS) \
 	$(filter-out src/main.o, $(OBJS)) \
 	$(PROTO_OBJS) \
 	$(CXXFLAGS) \
