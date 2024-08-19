@@ -245,7 +245,7 @@ void syslock::auth_end() {
 void syslock::on_entry_changed() {
 	// Trigger a password check automatically
 	if ((int)entry_password.get_text().length() == config_main.pw_length) {
-		dispatcher_auth.emit();
+		auth_start();
 	}
 }
 
