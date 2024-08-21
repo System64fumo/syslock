@@ -204,7 +204,8 @@ void syslock::auth_end() {
 		//unlock_session();
 
 		#ifdef FEATURE_TAP_TO_WAKE
-		listener->stop_listener();
+		if (listener->running)
+			listener->stop_listener();
 		#endif
 
 		// Add a delay for fancy css animations
@@ -355,10 +356,18 @@ void syslock::on_drag_stop(const double &x, const double &y) {
 	if (scrolled_window.get_height() > 300) {
 		scrolled_window.set_valign(Gtk::Align::FILL);
 		box_layout.set_opacity(1);
+		#ifdef FEATURE_TAP_TO_WAKE
+		if (listener->running)
+			listener->stop_listener();
+		#endif
 	}
 	else {
 		scrolled_window.set_valign(Gtk::Align::END);
 		box_layout.set_opacity(0);
+		#ifdef FEATURE_TAP_TO_WAKE
+		if (!listener->running)
+			listener->start_listener();
+		#endif
 	}
 	scrolled_window.set_size_request(-1, -1);
 }
@@ -391,7 +400,8 @@ void syslock::lock() {
 	}
 
 	#ifdef FEATURE_TAP_TO_WAKE
-	listener->start_listener();
+	if (!listener->running)
+		listener->start_listener();
 	#endif
 }
 
