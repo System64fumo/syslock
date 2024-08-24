@@ -5,6 +5,7 @@
 #include "git_info.hpp"
 
 #include <gtkmm/application.h>
+#include <filesystem>
 #include <iostream>
 #include <dlfcn.h>
 
@@ -34,7 +35,15 @@ void handle_signal(int signum) {
 int main(int argc, char* argv[]) {
 	// Load the config
 	#ifdef CONFIG_FILE
-	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
+	std::string config_path;
+	if (std::filesystem::exists(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf"))
+		config_path = std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf";
+	else if (std::filesystem::exists("/usr/share/sys64/lock/config.conf"))
+		config_path = "/usr/share/sys64/lock/config.conf";
+	else
+		config_path = "/usr/local/share/sys64/lock/config.conf";
+
+	config_parser config(config_path);
 
 	if (config.available) {
 		std::string cfg_start_unlocked = config.get_value("main", "start-unlocked");

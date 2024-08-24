@@ -159,8 +159,15 @@ syslock::syslock(const config_lock &cfg) {
 	#endif
 
 	// Load custom css
-	std::string css_path = home_dir + "/.config/sys64/lock/style.css";
-	css_loader css(css_path, this);
+	std::string style_path;
+	if (std::filesystem::exists(home_dir + "/.config/sys64/lock/style.css"))
+		style_path = home_dir + "/.config/sys64/lock/style.css";
+	else if (std::filesystem::exists("/usr/share/sys64/lock/style.css"))
+		style_path = "/usr/share/sys64/lock/style.css";
+	else
+		style_path = "/usr/local/share/sys64/lock/style.css";
+
+	css_loader css(style_path, this);
 
 	// Set classes properly (No clue why this has to be done this way, Don't question it)
 	signal_map().connect([this] () {
