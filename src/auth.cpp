@@ -1,7 +1,5 @@
 #include "auth.hpp"
 
-#include <iostream>
-
 int pam_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr) {
 	struct pam_response *response = (struct pam_response *)malloc(num_msg * sizeof(struct pam_response));
 	if (response == NULL) {
@@ -35,8 +33,6 @@ bool authenticate(char *user, const char *password) {
 }
 
 static void lock_surface_configure(void *data, struct ext_session_lock_surface_v1 *lock_surface, uint32_t serial, uint32_t width, uint32_t height) {
-	std::cout << "Lock surface configured\n" << \
-		"Width: " << width << ", Height: " << height << ", Serial: " << serial << std::endl;
 	ext_session_lock_surface_v1_ack_configure(lock_surface, serial);
 }
 
@@ -44,13 +40,9 @@ static ext_session_lock_surface_v1_listener lock_surface_listener = {
 	.configure = lock_surface_configure,
 };
 
-static void session_lock_done(void *data, struct ext_session_lock_v1 *lock) {
-	std::cout << "Session locked" << std::endl;
-}
+static void session_lock_done(void *data, struct ext_session_lock_v1 *lock) {}
 
-static void session_lock_finished(void *data, struct ext_session_lock_v1 *lock) {
-	std::cout << "Session lock finish" << std::endl;
-}
+static void session_lock_finished(void *data, struct ext_session_lock_v1 *lock) {}
 
 static ext_session_lock_v1_listener session_lock_listener = {
 	.locked = session_lock_done,
@@ -65,16 +57,13 @@ static void registry_handler(void *data, struct wl_registry *registry,
 			wl_registry_bind(registry, id,
 				&ext_session_lock_manager_v1_interface, 1u);
 
-		std::cout << "Locking session" << std::endl;
 		session_lock = ext_session_lock_manager_v1_lock(session_lock_manager);
 		ext_session_lock_v1_add_listener(session_lock, &session_lock_listener, nullptr);
 		wayland_surface = gdk_wayland_surface_get_wl_surface(gdk_surface);
 	}
 	else if (strcmp(interface, wl_output_interface.name) == 0) {
 		output = (struct wl_output *) wl_registry_bind(registry, id, &wl_output_interface, 1);
-		std::cout << "Bound to wl_output, id: " << id << ", version: " << version << std::endl;
 
-		std::cout << "Locking surface" << std::endl;
 		wl_display_roundtrip(wayland_display);
 		auto lock_surface = ext_session_lock_v1_get_lock_surface(session_lock, wayland_surface, output);
 		ext_session_lock_surface_v1_add_listener(lock_surface, &lock_surface_listener, nullptr);

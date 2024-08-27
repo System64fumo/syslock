@@ -6,13 +6,12 @@
 
 #include <gtkmm/application.h>
 #include <filesystem>
-#include <iostream>
 #include <dlfcn.h>
 
 void load_libsyslock() {
 	void* handle = dlopen("libsyslock.so", RTLD_LAZY);
 	if (!handle) {
-		std::cerr << "Cannot open library: " << dlerror() << '\n';
+		std::fprintf(stderr, "Cannot open library: %s\n", dlerror());
 		exit(1);
 	}
 
@@ -20,7 +19,7 @@ void load_libsyslock() {
 	syslock_lock_ptr = (syslock_lock_func)dlsym(handle, "syslock_lock");
 
 	if (!syslock_create_ptr || !syslock_lock_ptr) {
-		std::cerr << "Cannot load symbols: " << dlerror() << '\n';
+		std::fprintf(stderr, "Cannot load symbols: %s\n", dlerror());
 		dlclose(handle);
 		exit(1);
 	}
@@ -91,22 +90,22 @@ int main(int argc, char* argv[]) {
 				continue;
 
 			case 'v':
-				std::cout << "Commit: " << GIT_COMMIT_MESSAGE << std::endl;
-				std::cout << "Date: " << GIT_COMMIT_DATE << std::endl;
+				std::printf("Commit: %s\n", GIT_COMMIT_MESSAGE);
+				std::printf("Date: %s\n", GIT_COMMIT_DATE);
 				return 0;
 
 			case 'h':
 			default :
-				std::cout << "usage:" << std::endl;
-				std::cout << "  syslock [argument...]:\n" << std::endl;
-				std::cout << "arguments:" << std::endl;
-				std::cout << "  -s	Start unlocked" << std::endl;
-				std::cout << "  -k	Enable the keypad" << std::endl;
-				std::cout << "  -l	Set password length" << std::endl;
-				std::cout << "  -m	Set primary monitor" << std::endl;
-				std::cout << "  -d	Enable debug mode" << std::endl;
-				std::cout << "  -v	Prints version info" << std::endl;
-				std::cout << "  -h	Show this help message" << std::endl;
+				std::printf("usage:\n");
+				std::printf("  syslock [argument...]:\n\n");
+				std::printf("arguments:\n");
+				std::printf("  -s	Start unlocked\n");
+				std::printf("  -k	Enable the keypad\n");
+				std::printf("  -l	Set password length\n");
+				std::printf("  -m	Set primary monitor\n");
+				std::printf("  -d	Enable debug mode\n");
+				std::printf("  -v	Prints version info\n");
+				std::printf("  -h	Show this help message\n");
 				return 0;
 
 			case -1:
