@@ -3,7 +3,6 @@
 #include "auth.hpp"
 
 #include <gtk4-layer-shell.h>
-#include <iostream>
 #include <filesystem>
 #include <pwd.h>
 #include <glibmm/main.h>
@@ -207,7 +206,6 @@ void syslock::auth_start() {
 
 void syslock::auth_end() {
 	if (auth) {
-		std::cout << "Authentication successful" << std::endl;
 		//unlock_session();
 
 		#ifdef FEATURE_TAP_TO_WAKE
@@ -228,22 +226,21 @@ void syslock::auth_end() {
 				window->get_style_context()->add_class("locked");
 				window->get_style_context()->remove_class("unlocked");
 				window->hide();
+				locked = false;
 			}
 			entry_password.set_text("");
 			connection.disconnect();
 
 			if (unlock_cmd != "") {
-				std::thread thread_cmd([this](){
+				pid_t pid = fork();
+				if (pid == 0)
 					system(unlock_cmd.c_str());
-				});
-				thread_cmd.detach();
 			}
 			return false;
 		}, 250);
 	}
 	else {
 		// TODO: Display how many times the user can retry the password
-		std::cerr << "Authentication failed" << std::endl;
 		entry_password.set_text("");
 		label_error.show();
 	}
@@ -399,17 +396,21 @@ void syslock::lock() {
 	scrolled_window.set_size_request(-1, -1);
 	entry_password.set_text("");
 
+	if (locked)
+		return;
+
 	if (lock_cmd != "") {
-		std::thread thread_cmd([this](){
+		pid_t pid = fork();
+		if (pid == 0)
 			system(lock_cmd.c_str());
-		});
-		thread_cmd.detach();
 	}
 
 	#ifdef FEATURE_TAP_TO_WAKE
 	if (!listener->running)
 		listener->start_listener();
 	#endif
+
+	locked = true;
 }
 
 extern "C" {

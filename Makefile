@@ -30,7 +30,7 @@ LDFLAGS += -Wl,--as-needed,-z,now,-z,pack-relative-relocs
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
 LDFLAGS += $(shell pkg-config --libs $(PKGS))
 
-JOB_COUNT := $(EXEC) $(LIB) $(PROTO_HDRS) $(PROTO_SRCS) $(PROTO_OBJS) $(OBJS) src/git_info.hpp
+JOB_COUNT := $(BINS) $(LIBS) $(PROTO_HDRS) $(PROTO_SRCS) $(PROTO_OBJS) $(OBJS) src/git_info.hpp
 JOBS_DONE := $(shell ls -l $(JOB_COUNT) 2> /dev/null | wc -l)
 
 define progress

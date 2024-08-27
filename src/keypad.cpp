@@ -1,7 +1,6 @@
 #include "keypad.hpp"
 
 #include <gtkmm/button.h>
-#include <iostream>
 
 keypad::keypad(Gtk::Entry &entry, const std::function<void()> &enter_func) : Gtk::FlowBox() {
 	set_min_children_per_line(3);
