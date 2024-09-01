@@ -232,9 +232,9 @@ void syslock::auth_end() {
 			connection.disconnect();
 
 			if (unlock_cmd != "") {
-				pid_t pid = fork();
-				if (pid == 0)
+				std::thread([this]() {
 					system(unlock_cmd.c_str());
+				}).detach();
 			}
 			return false;
 		}, 250);
@@ -400,9 +400,9 @@ void syslock::lock() {
 		return;
 
 	if (lock_cmd != "") {
-		pid_t pid = fork();
-		if (pid == 0)
+		std::thread([this]() {
 			system(lock_cmd.c_str());
+		}).detach();
 	}
 
 	#ifdef FEATURE_TAP_TO_WAKE

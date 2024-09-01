@@ -62,43 +62,38 @@ void tap_to_wake::start_listener() {
 			FD_SET(fd, &fds);
 			FD_SET(pipefd[0], &fds);
 			int max_fd = std::max(fd, pipefd[0]);
-
 			int select_result = select(max_fd + 1, &fds, nullptr, nullptr, nullptr);
-			if (!(select_result > 0))
-				break;
 
-			// Stop requested
-			if (FD_ISSET(pipefd[0], &fds))
-				break;
+			if (!FD_ISSET(fd, &fds))
+				continue;
 
-			if (FD_ISSET(fd, &fds)) {
-				struct input_event ev;
-				rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
+			struct input_event ev;
+			rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
 
-				if (rc != 0)
-					break;
+			if (rc != 0)
+				continue;
 
-				if (ev.type == 3 && ev.code == 57) {
-					if (ev.value != -1) {
-						start_timestamp = ev.time.tv_sec * 1000000;
-						start_timestamp += ev.time.tv_usec;
-					}
-					else {
-						long stop_timestamp = ev.time.tv_sec * 1000000;
-						stop_timestamp += ev.time.tv_usec;
-						if (!(stop_timestamp - start_timestamp < timeout * 1000))
-							break;
-
-						if (tap_cmd == "")
-							break;
-
-						pid_t pid = fork();
-						if (pid == 0)
-							system(tap_cmd.c_str());
+			if (ev.type == 3 && ev.code == 57) {
+				if (ev.value != -1) {
+					start_timestamp = ev.time.tv_sec * 1000000;
+					start_timestamp += ev.time.tv_usec;
+				}
+				else {
+					long stop_timestamp = ev.time.tv_sec * 1000000;
+					stop_timestamp += ev.time.tv_usec;
+					if (stop_timestamp - start_timestamp < timeout * 1000) {
+						if (tap_cmd != "") {
+							std::thread([this]() {
+								system(tap_cmd.c_str());
+							}).detach();
+						}
 					}
 				}
 			}
+		else if (select_result < 0)
+			break;
 		}
+
 		close(pipefd[0]);
 		close(pipefd[1]);
 	});
