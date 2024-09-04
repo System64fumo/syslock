@@ -178,7 +178,8 @@ syslock::syslock(const config_lock &cfg) {
 		// TODO: This is unstable, Sometimes it works sometimes it doesn't
 		// Figure out why it's like this somehow.
 		// Also for some reason this causes the window to show twice?
-		//lock_session(this);
+		if (config_main.experimental)
+			lock_session(this);
 	});
 
 	show_windows();
@@ -206,7 +207,8 @@ void syslock::auth_start() {
 
 void syslock::auth_end() {
 	if (auth) {
-		//unlock_session();
+		if (config_main.experimental)
+			unlock_session();
 
 		#ifdef FEATURE_TAP_TO_WAKE
 		if (listener->running)
