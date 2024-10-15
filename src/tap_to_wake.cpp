@@ -55,7 +55,7 @@ void tap_to_wake::start_listener() {
 	pipe(pipefd);
 	fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
 
-	thread_tap_listener = std::jthread([this](std::stop_token stoken){
+	thread_tap_listener = std::jthread([this](std::stop_token stoken) {
 		while (!stoken.stop_requested()) {
 			fd_set fds;
 			FD_ZERO(&fds);
@@ -75,13 +75,15 @@ void tap_to_wake::start_listener() {
 
 			if (ev.type == 3 && ev.code == 57) {
 				if (ev.value != -1) {
+					fingers_held++;
 					start_timestamp = ev.time.tv_sec * 1000000;
 					start_timestamp += ev.time.tv_usec;
 				}
 				else {
+					fingers_held--;
 					long stop_timestamp = ev.time.tv_sec * 1000000;
 					stop_timestamp += ev.time.tv_usec;
-					if (stop_timestamp - start_timestamp < timeout * 1000) {
+					if (stop_timestamp - start_timestamp < timeout * 1000 && fingers_held == 0) {
 						if (tap_cmd != "") {
 							std::thread([this]() {
 								system(tap_cmd.c_str());
