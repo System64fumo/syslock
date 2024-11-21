@@ -1,10 +1,9 @@
 #pragma once
 #include "window.hpp"
 
-config_lock config_main;
 syslock *win;
 
-typedef syslock* (*syslock_create_func)(const config_lock &cfg);
+typedef syslock* (*syslock_create_func)(const std::map<std::string, std::map<std::string, std::string>>&);
 typedef void (*syslock_lock_func)(syslock*);
 
 syslock_create_func syslock_create_ptr;

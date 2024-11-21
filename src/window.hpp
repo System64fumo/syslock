@@ -19,15 +19,14 @@
 class syslock : public Gtk::Window {
 
 	public:
-		syslock(const config_lock &cfg);
+		syslock(const std::map<std::string, std::map<std::string, std::string>>&);
 		void lock();
 
+		std::map<std::string, std::map<std::string, std::string>> config_main;
 		std::vector<Gtk::Window*> windows;
 
 	private:
 		bool locked;
-
-		config_lock config_main;
 		double window_height;
 		int start_height;
 		bool auth;
@@ -84,7 +83,7 @@ class syslock : public Gtk::Window {
 };
 
 extern "C" {
-	syslock *syslock_create(const config_lock &cfg);
+	syslock *syslock_create(const std::map<std::string, std::map<std::string, std::string>>&);
 	void syslock_lock(syslock* window);
 }
 
