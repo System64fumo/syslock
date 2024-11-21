@@ -4,26 +4,11 @@
 #include <fcntl.h>
 #include <sys/select.h>
 
-tap_to_wake::tap_to_wake() {
-	#ifdef CONFIG_FILE
-	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
-
-	std::string cfg_device_path = config.get_value("tap-to-wake", "device-path");
-	if (cfg_device_path != "empty")
-		device_path = cfg_device_path;
-
-	std::string cfg_verbose = config.get_value("tap-to-wake", "verbose");
-	if (cfg_verbose != "empty")
-		verbose = (cfg_verbose == "true");
-
-	std::string cfg_timeout = config.get_value("tap-to-wake", "timeout");
-	if (cfg_timeout != "empty")
-		timeout = std::stoi(cfg_timeout);
-
-	std::string cfg_tap_cmd = config.get_value("events", "on-tap-cmd");
-	if (cfg_tap_cmd != "empty")
-		tap_cmd = cfg_tap_cmd;
-	#endif
+tap_to_wake::tap_to_wake(const std::map<std::string, std::map<std::string, std::string>>& cfg) {
+	config_main = cfg;
+	device_path = config_main["tap-to-wake"]["device-path"];
+	timeout = std::stoi(config_main["tap-to-wake"]["timeout"]);
+	tap_cmd = config_main["events"]["on-tap-cmd"];
 }
 
 tap_to_wake::~tap_to_wake() {

@@ -32,37 +32,43 @@ void handle_signal(int signum) {
 }
 
 int main(int argc, char* argv[]) {
-	// Load the config
 	#ifdef CONFIG_FILE
 	std::string config_path;
-	if (std::filesystem::exists(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf"))
-		config_path = std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf";
-	else if (std::filesystem::exists("/usr/share/sys64/lock/config.conf"))
+	std::map<std::string, std::map<std::string, std::string>> config;
+	std::map<std::string, std::map<std::string, std::string>> config_usr;
+
+	bool cfg_sys = std::filesystem::exists("/usr/share/sys64/lock/config.conf");
+	bool cfg_sys_local = std::filesystem::exists("/usr/local/share/sys64/lock/config.conf");
+	bool cfg_usr = std::filesystem::exists(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
+
+	// Load default config
+	if (cfg_sys)
 		config_path = "/usr/share/sys64/lock/config.conf";
-	else
+	else if (cfg_sys_local)
 		config_path = "/usr/local/share/sys64/lock/config.conf";
+	else
+		std::fprintf(stderr, "No default config found, Things will get funky!\n");
 
-	config_parser config(config_path);
+	config = config_parser(config_path).data;
 
-	if (config.available) {
-		std::string cfg_start_unlocked = config.get_value("main", "start-unlocked");
-		if (cfg_start_unlocked != "empty")
-			config_main.start_unlocked = (cfg_start_unlocked == "true");
+	// Load user config
+	if (cfg_usr)
+		config_path = std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf";
+	else
+		std::fprintf(stderr, "No user config found\n");
 
-		std::string cfg_keypad = config.get_value("main", "keypad");
-		if (cfg_keypad != "empty")
-			config_main.keypad_enabled = (cfg_keypad == "true");
+	config_usr = config_parser(config_path).data;
 
-		std::string cfg_pw_length = config.get_value("main", "password-length");
-		if (cfg_pw_length != "empty")
-			config_main.pw_length = std::stoi(cfg_pw_length);
+	// Merge configs
+	for (const auto& [key, nested_map] : config_usr)
+		for (const auto& [inner_key, inner_value] : nested_map)
+			config[key][inner_key] = inner_value;
 
-		std::string cfg_main_monitor = config.get_value("main", "main-monitor");
-		if (cfg_main_monitor != "empty")
-			config_main.main_monitor = std::stoi(cfg_main_monitor);
+	// Sanity check
+	if (!(cfg_sys || cfg_sys_local || cfg_usr)) {
+		std::fprintf(stderr, "No config available, Something ain't right here.");
+		return 1;
 	}
-
-	// Debug doesn't need a config entry
 	#endif
 
 	// Read launch arguments
@@ -70,27 +76,27 @@ int main(int argc, char* argv[]) {
 	while (true) {
 		switch(getopt(argc, argv, "skl:dm:dedvh")) {
 			case 's':
-				config_main.start_unlocked=true;
+				config["main"]["start-unlocked"] = "true";
 				continue;
 
 			case 'k':
-				config_main.keypad_enabled = true;
+				config["main"]["keypad"] = "true";
 				continue;
 
 			case 'l':
-				config_main.pw_length = std::stoi(optarg);
+				config["main"]["password-length"] = optarg;
 				continue;
 
 			case 'm':
-				config_main.main_monitor = std::stoi(optarg);
+				config["main"]["main-monitor"] = optarg;
 				continue;
 
 			case 'e':
-				config_main.experimental = true;
+				config["main"]["experimental"] = "true";
 				continue;
 
 			case 'd':
-				config_main.debug = true;
+				config["main"]["debug"] = "true";
 				continue;
 
 			case 'v':
@@ -125,7 +131,7 @@ int main(int argc, char* argv[]) {
 	app->hold();
 
 	load_libsyslock();
-	win = syslock_create_ptr(config_main);
+	win = syslock_create_ptr(config);
 
 	signal(SIGUSR1, handle_signal);
 

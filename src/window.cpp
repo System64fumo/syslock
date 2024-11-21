@@ -8,7 +8,7 @@
 #include <glibmm/main.h>
 #include <ctime>
 
-syslock::syslock(const config_lock &cfg) {
+syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>& cfg) {
 	config_main = cfg;
 
 	// Initialize
@@ -17,38 +17,13 @@ syslock::syslock(const config_lock &cfg) {
 	set_default_size(640, 480);
 	set_hide_on_close(true);
 
-	// Load the config
-	#ifdef CONFIG_FILE
-	config = new config_parser(std::string(getenv("HOME")) + "/.config/sys64/lock/config.conf");
-
-	std::string cfg_profile_path = config->get_value("profile", "image-path");
-	if (cfg_profile_path != "empty")
-		profile_picture_path = cfg_profile_path;
-
-	std::string cfg_profile_scale = config->get_value("profile", "scale");
-	if (cfg_profile_scale != "empty")
-		profile_scale = std::stoi(cfg_profile_scale);
-
-	std::string cfg_profile_rounding = config->get_value("profile", "rounding");
-	if (cfg_profile_rounding != "empty")
-		profile_rounding = std::stoi(cfg_profile_rounding);
-
-	std::string cfg_time_format = config->get_value("clock", "time-format");
-	if (cfg_time_format != "empty")
-		time_format = cfg_time_format;
-
-	std::string cfg_date_format = config->get_value("clock", "date-format");
-	if (cfg_date_format != "empty")
-		date_format = cfg_date_format;
-
-	std::string cfg_event_lock = config->get_value("events", "on-lock-cmd");
-	if (cfg_event_lock != "empty")
-		lock_cmd = cfg_event_lock;
-
-	std::string cfg_event_unlock = config->get_value("events", "on-unlock-cmd");
-	if (cfg_event_unlock != "empty")
-		unlock_cmd = cfg_event_unlock;
-	#endif
+	profile_picture_path = config_main["profile"]["image-path"];
+	profile_scale = std::stoi(config_main["profile"]["scale"]);
+	profile_rounding = std::stoi(config_main["profile"]["rounding"]);
+	time_format = config_main["clock"]["time-format"];
+	date_format = config_main["clock"]["date-format"];
+	lock_cmd = config_main["events"]["on-lock-cmd"];
+	unlock_cmd = config_main["events"]["on-unlock-cmd"];
 
 	// Set up drag gestures
 	gesture_drag = Gtk::GestureDrag::create();
@@ -146,7 +121,7 @@ syslock::syslock(const config_lock &cfg) {
 	label_error.hide();
 
 	// Keypad
-	if (config_main.keypad_enabled) {
+	if (config_main["main"]["keypad"] == "true") {
 		keypad_main = Gtk::make_managed<keypad>(entry_password, sigc::mem_fun(*this, &syslock::auth_start));
 		box_login_screen.append(*keypad_main);
 		entry_password.set_input_purpose(Gtk::InputPurpose::PIN);
@@ -154,7 +129,7 @@ syslock::syslock(const config_lock &cfg) {
 
 	// Tap to wake
 	#ifdef FEATURE_TAP_TO_WAKE
-	listener = new tap_to_wake();
+	listener = new tap_to_wake(config_main);
 	#endif
 
 	// Load custom css
@@ -178,7 +153,7 @@ syslock::syslock(const config_lock &cfg) {
 		// TODO: This is unstable, Sometimes it works sometimes it doesn't
 		// Figure out why it's like this somehow.
 		// Also for some reason this causes the window to show twice?
-		if (config_main.experimental)
+		if (config_main["main"]["experimental"] == "true")
 			lock_session(this);
 	});
 
@@ -207,7 +182,7 @@ void syslock::auth_start() {
 
 void syslock::auth_end() {
 	if (auth) {
-		if (config_main.experimental)
+		if (config_main["main"]["experimental"] == "true")
 			unlock_session();
 
 		#ifdef FEATURE_TAP_TO_WAKE
@@ -251,7 +226,7 @@ void syslock::auth_end() {
 
 void syslock::on_entry_changed() {
 	// Trigger a password check automatically
-	if ((int)entry_password.get_text().length() == config_main.pw_length) {
+	if ((int)entry_password.get_text().length() == std::stoi(config_main["main"]["password-length"])) {
 		auth_start();
 	}
 }
@@ -272,23 +247,24 @@ void syslock::show_windows() {
 	GdkDisplay *display = gdk_display_get_default();
 	GListModel *monitors = gdk_display_get_monitors(display);
 
+	int main_monitor = std::stoi(config_main["main"]["main-monitor"]);
 	int monitorCount = g_list_model_get_n_items(monitors);
 
-	if (config_main.main_monitor < 0)
-		config_main.main_monitor = 0;
-	else if (config_main.main_monitor >= monitorCount)
-		config_main.main_monitor = monitorCount - 1;
+	if (main_monitor < 0)
+		main_monitor = 0;
+	else if (main_monitor >= monitorCount)
+		main_monitor = monitorCount - 1;
 
 	// Set up layer shell
-	if (!config_main.debug) {
-		setup_window(gobj(), GDK_MONITOR(g_list_model_get_item(monitors, config_main.main_monitor)), "syslock");
+	if (config_main["main"]["debug"] != "true") {
+		setup_window(gobj(), GDK_MONITOR(g_list_model_get_item(monitors, main_monitor)), "syslock");
 		gtk_layer_set_keyboard_mode(gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
 
 		// TODO: (VERY CRITICAL!!!)
 		// Add a way to detect when a monitor is connected/disconnected
 		for (int i = 0; i < monitorCount; ++i) {
 			// Ignore primary monitor
-			if (i == config_main.main_monitor)
+			if (i == main_monitor)
 				continue;
 	
 			GdkMonitor *monitor = GDK_MONITOR(g_list_model_get_item(monitors, i));
@@ -300,12 +276,12 @@ void syslock::show_windows() {
 			windows.push_back(window);
 			setup_window(window->gobj(), monitor, "syslock-empty-window");
 
-			if (!config_main.start_unlocked)
+			if (config_main["main"]["start-unlocked"] != "true")
 				window->show();
 		}
 	}
 
-	if (!config_main.start_unlocked)
+	if (config_main["main"]["start-unlocked"] != "true")
 		show();
 }
 
@@ -313,7 +289,7 @@ void syslock::on_drag_start(const double &x, const double &y) {
 	connection.disconnect();
 
 	// Block gesture inputs from the keypad
-	if (config_main.keypad_enabled) {
+	if (config_main["main"]["keypad"] == "true") {
 		double keypad_x, keypad_y;
 		keypad_main->translate_coordinates(box_lock_screen, 0, 0, keypad_x, keypad_y);
 
@@ -416,7 +392,7 @@ void syslock::lock() {
 }
 
 extern "C" {
-	syslock *syslock_create(const config_lock &cfg) {
+	syslock *syslock_create(const std::map<std::string, std::map<std::string, std::string>>& cfg) {
 		return new syslock(cfg);
 	}
 

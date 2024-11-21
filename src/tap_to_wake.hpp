@@ -5,10 +5,11 @@
 #include <string>
 #include <libevdev-1.0/libevdev/libevdev.h>
 #include <thread>
+#include <map>
 
 class tap_to_wake {
 	public:
-		tap_to_wake();
+		tap_to_wake(const std::map<std::string, std::map<std::string, std::string>>&);
 		~tap_to_wake();
 
 		bool running;
@@ -16,6 +17,7 @@ class tap_to_wake {
 		void stop_listener();
 
 	private:
+		std::map<std::string, std::map<std::string, std::string>> config_main;
 		int pipefd[2];
 		int fd;
 		int rc;
