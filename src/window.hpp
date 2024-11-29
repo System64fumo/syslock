@@ -27,7 +27,7 @@ class syslock : public Gtk::Window {
 
 	private:
 		bool locked;
-		int window_height;
+		double window_height;
 		int start_height;
 		bool auth;
 		sigc::connection connection;

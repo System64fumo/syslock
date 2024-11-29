@@ -8,7 +8,7 @@
 #include <glibmm/main.h>
 #include <ctime>
 
-syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>& cfg) : window_height(480) {
+syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>& cfg) : window_height(480.0) {
 	config_main = cfg;
 
 	// Initialize
@@ -69,7 +69,7 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 
 	// And add a way to enable/disable specific features (PFP, Username, Ect)
 
-	std::string home_dir = getenv("HOME");
+	const std::string& home_dir = getenv("HOME");
 	if (profile_picture_path == "")
 		profile_picture_path = home_dir + "/.face";
 
@@ -90,7 +90,7 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 
 	box_widgets.append(label_username);
 	label_username.get_style_context()->add_class("label_username");
-	uid_t uid = geteuid();
+	const uid_t& uid = geteuid();
 	struct passwd *pw = getpwuid(uid);
 	label_username.set_text((Glib::ustring)pw->pw_gecos);
 
@@ -254,7 +254,7 @@ void syslock::show_windows() {
 	GListModel *monitors = gdk_display_get_monitors(display);
 
 	int main_monitor = std::stoi(config_main["main"]["main-monitor"]);
-	int monitorCount = g_list_model_get_n_items(monitors);
+	const int& monitorCount = g_list_model_get_n_items(monitors);
 
 	if (main_monitor < 0)
 		main_monitor = 0;
@@ -317,20 +317,21 @@ void syslock::on_drag_start(const double &x, const double &y) {
 
 	start_height = scrolled_window.get_height();
 	scrolled_window.set_valign(Gtk::Align::END);
-	if (start_height > 300)
-		scrolled_window.set_size_request(-1, window_height);
+	if (start_height > 300) {
+		scrolled_window.set_size_request(-1, get_height());
+	}
 }
 
 void syslock::on_drag_update(const double &x, const double &y) {
 	if (start_height < 100) {
 		if (scrolled_window.get_height() >= window_height)
 			return;
-		scrolled_window.set_size_request(-1, std::min((double)window_height, std::max(0.0, - y)));
+		scrolled_window.set_size_request(-1, std::min(window_height, std::max(0.0, - y)));
 	}
 	else {
 		if (-y > 0)
 			return;
-		scrolled_window.set_size_request(-1, std::min((double)window_height, std::max(0.0, start_height - y)));
+		scrolled_window.set_size_request(-1, std::min(window_height, std::max(0.0, start_height - y)));
 	}
 
 	box_layout.set_opacity(scrolled_window.get_height() / window_height);
@@ -361,7 +362,7 @@ void syslock::on_drag_stop(const double &x, const double &y) {
 }
 
 bool syslock::update_time_date() {
-	std::time_t now = std::time(nullptr);
+	const std::time_t& now = std::time(nullptr);
 	std::tm* local_time = std::localtime(&now);
 
 	char time_buffer[32];
@@ -409,7 +410,6 @@ void syslock::snapshot_vfunc(const Glib::RefPtr<Gtk::Snapshot>& snapshot) {
 	// Render normally
 	Gtk::Window::snapshot_vfunc(snapshot);
 }
-
 
 extern "C" {
 	syslock *syslock_create(const std::map<std::string, std::map<std::string, std::string>>& cfg) {

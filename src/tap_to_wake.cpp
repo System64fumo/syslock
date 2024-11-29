@@ -1,5 +1,4 @@
 #include "tap_to_wake.hpp"
-#include "config_parser.hpp"
 
 #include <fcntl.h>
 #include <sys/select.h>
