@@ -8,7 +8,7 @@
 #include <glibmm/main.h>
 #include <ctime>
 
-syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>& cfg) {
+syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>& cfg) : window_height(480) {
 	config_main = cfg;
 
 	// Initialize
@@ -58,9 +58,14 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 	scrolled_window.set_policy(Gtk::PolicyType::EXTERNAL, Gtk::PolicyType::EXTERNAL);
 	scrolled_window.set_valign(Gtk::Align::END);
 
-	box_login_screen.property_orientation().set_value(Gtk::Orientation::VERTICAL);
+	box_login_screen.property_orientation().set_value(Gtk::Orientation::HORIZONTAL);
 	box_login_screen.set_valign(Gtk::Align::CENTER);
 	box_login_screen.set_vexpand(true);
+	box_login_screen.append(box_widgets);
+
+	box_widgets.set_orientation(Gtk::Orientation::VERTICAL);
+	box_widgets.set_valign(Gtk::Align::CENTER);
+	box_widgets.set_hexpand(true);
 
 	// And add a way to enable/disable specific features (PFP, Username, Ect)
 
@@ -69,7 +74,7 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 		profile_picture_path = home_dir + "/.face";
 
 	if (std::filesystem::exists(profile_picture_path) && profile_scale > 0) {
-		box_login_screen.append(image_profile);
+		box_widgets.append(image_profile);
 		image_profile.get_style_context()->add_class("image_profile");
 		auto pixbuf = Gdk::Pixbuf::create_from_file(profile_picture_path);
 		pixbuf = pixbuf->scale_simple(profile_scale, profile_scale, Gdk::InterpType::BILINEAR);
@@ -83,13 +88,13 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 		image_profile.set_halign(Gtk::Align::CENTER);
 	}
 
-	box_login_screen.append(label_username);
+	box_widgets.append(label_username);
 	label_username.get_style_context()->add_class("label_username");
 	uid_t uid = geteuid();
 	struct passwd *pw = getpwuid(uid);
 	label_username.set_text((Glib::ustring)pw->pw_gecos);
 
-	box_login_screen.append(entry_password);
+	box_widgets.append(entry_password);
 	entry_password.get_style_context()->add_class("entry_password");
 	entry_password.set_size_request(250, 30);
 	entry_password.set_halign(Gtk::Align::CENTER);
@@ -124,6 +129,7 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 	if (config_main["main"]["keypad"] == "true") {
 		keypad_main = Gtk::make_managed<keypad>(entry_password, sigc::mem_fun(*this, &syslock::auth_start));
 		box_login_screen.append(*keypad_main);
+		keypad_main->set_hexpand(true);
 		entry_password.set_input_purpose(Gtk::InputPurpose::PIN);
 	}
 
@@ -263,11 +269,13 @@ void syslock::show_windows() {
 		// TODO: (VERY CRITICAL!!!)
 		// Add a way to detect when a monitor is connected/disconnected
 		for (int i = 0; i < monitorCount; ++i) {
-			// Ignore primary monitor
-			if (i == main_monitor)
-				continue;
-	
 			GdkMonitor *monitor = GDK_MONITOR(g_list_model_get_item(monitors, i));
+
+			if (i == main_monitor) {
+				GdkRectangle geometry;
+				gdk_monitor_get_geometry(monitor, &geometry);
+				window_height = geometry.height;
+			}
 	
 			// Create empty windows
 			Gtk::Window *window = Gtk::make_managed<Gtk::Window>();
@@ -307,7 +315,6 @@ void syslock::on_drag_start(const double &x, const double &y) {
 		return;
 	}
 
-	window_height = get_height();
 	start_height = scrolled_window.get_height();
 	scrolled_window.set_valign(Gtk::Align::END);
 	if (start_height > 300)
@@ -318,12 +325,12 @@ void syslock::on_drag_update(const double &x, const double &y) {
 	if (start_height < 100) {
 		if (scrolled_window.get_height() >= window_height)
 			return;
-		scrolled_window.set_size_request(-1, std::min(window_height, std::max(0.0, - y)));
+		scrolled_window.set_size_request(-1, std::min((double)window_height, std::max(0.0, - y)));
 	}
 	else {
 		if (-y > 0)
 			return;
-		scrolled_window.set_size_request(-1, std::min(window_height, std::max(0.0, start_height - y)));
+		scrolled_window.set_size_request(-1, std::min((double)window_height, std::max(0.0, start_height - y)));
 	}
 
 	box_layout.set_opacity(scrolled_window.get_height() / window_height);
@@ -389,6 +396,20 @@ void syslock::lock() {
 
 	locked = true;
 }
+
+void syslock::snapshot_vfunc(const Glib::RefPtr<Gtk::Snapshot>& snapshot) {
+	Glib::signal_idle().connect([&]() {
+		if (get_height() > get_width())
+			box_login_screen.set_orientation(Gtk::Orientation::VERTICAL);
+		else
+			box_login_screen.set_orientation(Gtk::Orientation::HORIZONTAL);
+		return false;
+	});
+
+	// Render normally
+	Gtk::Window::snapshot_vfunc(snapshot);
+}
+
 
 extern "C" {
 	syslock *syslock_create(const std::map<std::string, std::map<std::string, std::string>>& cfg) {

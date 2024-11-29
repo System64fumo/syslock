@@ -27,7 +27,7 @@ class syslock : public Gtk::Window {
 
 	private:
 		bool locked;
-		double window_height;
+		int window_height;
 		int start_height;
 		bool auth;
 		sigc::connection connection;
@@ -42,6 +42,7 @@ class syslock : public Gtk::Window {
 		Gtk::Box box_lock_screen;
 		Gtk::Box box_login_screen;
 		Gtk::Box box_layout;
+		Gtk::Box box_widgets;
 		Gtk::ScrolledWindow scrolled_window;
 		Gtk::Overlay overlay;
 
@@ -80,6 +81,9 @@ class syslock : public Gtk::Window {
 		void on_drag_stop(const double &x, const double &y);
 
 		bool update_time_date();
+
+	protected:
+		void snapshot_vfunc(const Glib::RefPtr<Gtk::Snapshot>&);
 };
 
 extern "C" {
