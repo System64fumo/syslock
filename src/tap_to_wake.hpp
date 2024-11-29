@@ -21,14 +21,13 @@ class tap_to_wake {
 		int pipefd[2];
 		int fd;
 		int rc;
-		struct libevdev *dev = nullptr;
+		struct libevdev* dev = nullptr;
 		std::jthread thread_tap_listener;
 		long start_timestamp = 0;
 		int fingers_held = 0;
 
 		// Configs
 		std::string device_path = "/dev/input/by-path/SET-ME-UP";
-		bool verbose = false;
 		int timeout = 500;
 		std::string tap_cmd = "";
 };
