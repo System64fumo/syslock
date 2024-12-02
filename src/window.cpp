@@ -275,6 +275,7 @@ void syslock::show_windows() {
 				GdkRectangle geometry;
 				gdk_monitor_get_geometry(monitor, &geometry);
 				window_height = geometry.height;
+				continue;
 			}
 	
 			// Create empty windows
