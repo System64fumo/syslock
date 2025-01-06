@@ -120,7 +120,7 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 	dispatcher_auth.connect(sigc::mem_fun(*this, &syslock::auth_end));
 
 	// TODO: add remaining tries left
-	box_login_screen.append(label_error);
+	box_widgets.append(label_error);
 	label_error.get_style_context()->add_class("label_error");
 	label_error.set_text("Incorrect password");
 	label_error.hide();
