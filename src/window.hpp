@@ -24,6 +24,7 @@ class syslock : public Gtk::Window {
 
 		std::map<std::string, std::map<std::string, std::string>> config_main;
 		std::vector<Gtk::Window*> windows;
+		Gtk::Entry entry_password;
 
 	private:
 		bool locked;
@@ -58,7 +59,6 @@ class syslock : public Gtk::Window {
 
 		Gtk::Label label_username;
 		Gtk::Label label_error;
-		Gtk::Entry entry_password;
 		Glib::RefPtr<Gtk::GestureDrag> gesture_drag;
 		Glib::Dispatcher dispatcher_auth;
 		keypad *keypad_main;
