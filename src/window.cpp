@@ -423,5 +423,6 @@ extern "C" {
 			Gtk::Window* window = *it;
 			window->show();
 		}
+		window->entry_password.grab_focus();
 	}
 }
