@@ -2,6 +2,8 @@
 Syslock is a simple lockscreen for wayland written in gtkmm4<br>
 ![preview](https://github.com/System64fumo/syslock/blob/main/preview.gif "preview")
 
+[![Packaging status](https://repology.org/badge/vertical-allrepos/syslock.svg)](https://repology.org/project/syslock/versions)
+
 > [!CAUTION]
 > This program does not use the ext session lock protocol. *Yet*<br>
 > Additional info at the bottom.<br>
