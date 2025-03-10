@@ -7,6 +7,7 @@ PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 LIBDIR ?= $(PREFIX)/lib
 DATADIR ?= $(PREFIX)/share
+BUILDDIR = build
 
 PROTOS = ext-session-lock-v1
 PROTO_DIR = /usr/share/wayland-protocols/staging/ext-session-lock
@@ -22,7 +23,7 @@ ifneq (, $(shell grep -E '^#define FEATURE_TAP_TO_WAKE' src/config.hpp))
 	CXXFLAGS += -std=c++20
 endif
 
-OBJS = $(SRCS:.cpp=.o)
+OBJS = $(patsubst src/%,$(BUILDDIR)/%, $(SRCS:.cpp=.o))
 
 CXXFLAGS += -Oz -s -Wall -flto=auto -fno-exceptions -fPIC
 LDFLAGS += -Wl,--as-needed,-z,now,-z,pack-relative-relocs
@@ -30,6 +31,7 @@ LDFLAGS += -Wl,--as-needed,-z,now,-z,pack-relative-relocs
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
 LDFLAGS += $(shell pkg-config --libs $(PKGS))
 
+$(shell mkdir -p $(BUILDDIR))
 JOB_COUNT := $(BINS) $(LIBS) $(PROTO_HDRS) $(PROTO_SRCS) $(PROTO_OBJS) $(OBJS) src/git_info.hpp
 JOBS_DONE := $(shell ls -l $(JOB_COUNT) 2> /dev/null | wc -l)
 
@@ -48,36 +50,34 @@ install: $(all)
 
 clean:
 	@echo "Cleaning up"
-	@rm	$(BINS) \
-		$(LIBS) \
-		$(OBJS) \
+	@rm -rf $(BUILDDIR) \
 		src/git_info.hpp \
 		$(PROTO_OBJS) \
 		$(PROTO_SRCS) \
 		$(PROTO_HDRS)
 
-$(BINS): src/git_info.hpp src/main.o src/config_parser.o
+$(BINS): src/git_info.hpp $(BUILDDIR)/main.o $(BUILDDIR)/config_parser.o
 	$(call progress, Linking $@)
-	@$(CXX) -o $(BINS) \
-	src/main.o \
-	src/config_parser.o \
+	@$(CXX) -o $(BUILDDIR)/$(BINS) \
+	$(BUILDDIR)/main.o \
+	$(BUILDDIR)/config_parser.o \
 	$(CXXFLAGS) \
 	$(shell pkg-config --libs gtkmm-4.0 gtk4-layer-shell-0)
 
 $(LIBS): $(PROTO_HDRS) $(PROTO_SRCS) $(PROTO_OBJS) $(OBJS)
 	$(call progress, Linking $@)
-	@$(CXX) -o $(LIBS) \
-	$(filter-out src/main.o, $(OBJS)) \
+	@$(CXX) -o $(BUILDDIR)/$(LIBS) \
+	$(filter-out $(BUILDDIR)/main.o, $(OBJS)) \
 	$(PROTO_OBJS) \
 	$(CXXFLAGS) \
 	$(LDFLAGS) \
 	-shared
 
-%.o: %.cpp
+$(BUILDDIR)/%.o: src/%.cpp
 	$(call progress, Compiling $@)
 	@$(CXX) -c $< -o $@ $(CXXFLAGS)
 
-%.o: %.c
+$(BUILDDIR)/%.o: src/%.c
 	$(call progress, Compiling $@)
 	@$(CC) -c $< -o $@ $(CFLAGS)
 
