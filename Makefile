@@ -44,8 +44,8 @@ all: $(BINS) $(LIBS)
 
 install: $(all)
 	@echo "Installing..."
-	@install -D -t $(DESTDIR)$(BINDIR) $(BINS)
-	@install -D -t $(DESTDIR)$(LIBDIR) $(LIBS)
+	@install -D -t $(DESTDIR)$(BINDIR) $(BUILDDIR)/$(BINS)
+	@install -D -t $(DESTDIR)$(LIBDIR) $(BUILDDIR)/$(LIBS)
 	@install -D -t $(DESTDIR)$(DATADIR)/sys64/lock config.conf style.css
 
 clean:
