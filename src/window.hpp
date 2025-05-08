@@ -16,7 +16,7 @@
 #include "keypad.hpp"
 #include "tap_to_wake.hpp"
 
-class syslock : public Gtk::Window {
+class syslock {
 
 	public:
 		syslock(const std::map<std::string, std::map<std::string, std::string>>&);
@@ -24,6 +24,7 @@ class syslock : public Gtk::Window {
 
 		std::map<std::string, std::map<std::string, std::string>> config_main;
 		std::vector<Gtk::Window*> windows;
+		Gtk::Window* primary_window;
 		Gtk::Entry entry_password;
 
 	private:
@@ -70,20 +71,20 @@ class syslock : public Gtk::Window {
 
 		Glib::RefPtr<Gdk::Pixbuf> create_rounded_pixbuf(const Glib::RefPtr<Gdk::Pixbuf> &src_pixbuf, const int &size, const int &rounding_radius);
 
+		Gtk::Window* create_main_window(GdkMonitor* monitor);
+		Gtk::Window* create_secondary_window(GdkMonitor* monitor);
+
 		void auth_start();
 		void auth_end();
 		void on_entry_changed();
+		void handle_windows();
 		void setup_window(GtkWindow *window, GdkMonitor *monitor, const char* name);
-		void show_windows();
 
 		void on_drag_start(const double &x, const double &y);
 		void on_drag_update(const double &x, const double &y);
 		void on_drag_stop(const double &x, const double &y);
 
 		bool update_time_date();
-
-	protected:
-		void snapshot_vfunc(const Glib::RefPtr<Gtk::Snapshot>&);
 };
 
 extern "C" {

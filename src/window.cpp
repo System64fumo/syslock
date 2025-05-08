@@ -2,21 +2,17 @@
 #include "css.hpp"
 #include "auth.hpp"
 
+#include <gtkmm/cssprovider.h>
 #include <gtk4-layer-shell.h>
 #include <filesystem>
 #include <pwd.h>
 #include <glibmm/main.h>
 #include <ctime>
 
-syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>& cfg) : window_height(480.0) {
+syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>& cfg) {
 	config_main = cfg;
 
 	// Initialize
-	set_name("syslock");
-	windows.push_back(this);
-	set_default_size(640, 480);
-	set_hide_on_close(true);
-
 	profile_picture_path = config_main["profile"]["image-path"];
 	profile_scale = std::stoi(config_main["profile"]["scale"]);
 	profile_rounding = std::stoi(config_main["profile"]["rounding"]);
@@ -30,108 +26,7 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 	gesture_drag->signal_drag_begin().connect(sigc::mem_fun(*this, &syslock::on_drag_start));
 	gesture_drag->signal_drag_update().connect(sigc::mem_fun(*this, &syslock::on_drag_update));
 	gesture_drag->signal_drag_end().connect(sigc::mem_fun(*this, &syslock::on_drag_stop));
-	add_controller(gesture_drag);
-
-	set_child(overlay);
-	overlay.set_child(box_lock_screen);
-	box_lock_screen.get_style_context()->add_class("lock_screen");
-	box_lock_screen.property_orientation().set_value(Gtk::Orientation::VERTICAL);
-
-	// TODO: Add a config option to select what appears on the lockscreen
-	box_lock_screen.append(label_time);
-	label_time.get_style_context()->add_class("time");
-
-	box_lock_screen.append(label_date);
-	label_date.get_style_context()->add_class("date");
-
-	Glib::signal_timeout().connect(sigc::mem_fun(*this, &syslock::update_time_date), 1000);
-	update_time_date();
-
-	overlay.add_overlay(box_layout);
-	box_layout.append(scrolled_window);
-	box_layout.get_style_context()->add_class("login_screen");
-	box_layout.property_orientation().set_value(Gtk::Orientation::VERTICAL);
-	box_layout.set_opacity(0);
-
-	scrolled_window.set_kinetic_scrolling(false);
-	scrolled_window.set_child(box_login_screen);
-	scrolled_window.set_policy(Gtk::PolicyType::EXTERNAL, Gtk::PolicyType::EXTERNAL);
-	scrolled_window.set_valign(Gtk::Align::END);
-
-	box_login_screen.property_orientation().set_value(Gtk::Orientation::HORIZONTAL);
-	box_login_screen.set_valign(Gtk::Align::CENTER);
-	box_login_screen.set_vexpand(true);
-	box_login_screen.append(box_widgets);
-
-	box_widgets.set_orientation(Gtk::Orientation::VERTICAL);
-	box_widgets.set_valign(Gtk::Align::CENTER);
-	box_widgets.set_hexpand(true);
-
-	// And add a way to enable/disable specific features (PFP, Username, Ect)
-
-	const std::string& home_dir = getenv("HOME");
-	if (profile_picture_path == "")
-		profile_picture_path = home_dir + "/.face";
-
-	if (std::filesystem::exists(profile_picture_path) && profile_scale > 0) {
-		box_widgets.append(image_profile);
-		image_profile.get_style_context()->add_class("image_profile");
-		auto pixbuf = Gdk::Pixbuf::create_from_file(profile_picture_path);
-		pixbuf = pixbuf->scale_simple(profile_scale, profile_scale, Gdk::InterpType::BILINEAR);
-
-		// Round the image
-		if (profile_rounding != 0)
-			pixbuf = create_rounded_pixbuf(pixbuf, profile_scale, profile_rounding);
-
-		image_profile.set_size_request(profile_scale, profile_scale);
-		image_profile.set(pixbuf);
-		image_profile.set_halign(Gtk::Align::CENTER);
-	}
-
-	box_widgets.append(label_username);
-	label_username.get_style_context()->add_class("label_username");
-	const uid_t& uid = geteuid();
-	struct passwd *pw = getpwuid(uid);
-	label_username.set_text((Glib::ustring)pw->pw_gecos);
-
-	box_widgets.append(entry_password);
-	entry_password.get_style_context()->add_class("entry_password");
-	entry_password.set_size_request(250, 30);
-	entry_password.set_halign(Gtk::Align::CENTER);
-	entry_password.set_visibility(false);
-	entry_password.set_input_purpose(Gtk::InputPurpose::PASSWORD);
-	entry_password.signal_activate().connect(sigc::mem_fun(*this, &syslock::auth_start));
-	entry_password.signal_changed().connect(sigc::mem_fun(*this, &syslock::on_entry_changed));
-	entry_password.grab_focus();
-	entry_password.signal_changed().connect([&]() {
-		if (entry_password.get_text() == "")
-			return;
-
-		scrolled_window.set_valign(Gtk::Align::FILL);
-		box_layout.set_opacity(1);
-		scrolled_window.set_size_request(-1, get_height());
-		connection.disconnect();
-		connection = Glib::signal_timeout().connect([&]() {
-			lock();
-			return false;
-		}, 10 * 1000);
-	});
-
 	dispatcher_auth.connect(sigc::mem_fun(*this, &syslock::auth_end));
-
-	// TODO: add remaining tries left
-	box_widgets.append(label_error);
-	label_error.get_style_context()->add_class("label_error");
-	label_error.set_text("Incorrect password");
-	label_error.hide();
-
-	// Keypad
-	if (config_main["main"]["keypad"] == "true") {
-		keypad_main = Gtk::make_managed<keypad>(entry_password, sigc::mem_fun(*this, &syslock::auth_start));
-		box_login_screen.append(*keypad_main);
-		keypad_main->set_hexpand(true);
-		entry_password.set_input_purpose(Gtk::InputPurpose::PIN);
-	}
 
 	// Tap to wake
 	#ifdef FEATURE_TAP_TO_WAKE
@@ -140,6 +35,7 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 
 	// Load custom css
 	std::string style_path;
+	const std::string& home_dir = getenv("HOME");
 	if (std::filesystem::exists(home_dir + "/.config/sys64/lock/style.css"))
 		style_path = home_dir + "/.config/sys64/lock/style.css";
 	else if (std::filesystem::exists("/usr/share/sys64/lock/style.css"))
@@ -147,23 +43,41 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 	else
 		style_path = "/usr/local/share/sys64/lock/style.css";
 
-	css_loader css(style_path, this);
+	if (std::filesystem::exists(style_path)) {
+		auto css = Gtk::CssProvider::create();
+		css->load_from_path(style_path);
+		auto display = Gdk::Display::get_default();
+		Gtk::StyleContext::add_provider_for_display(
+			display,
+			css,
+			GTK_STYLE_PROVIDER_PRIORITY_USER
+		);
+	}
 
 	// Set classes properly (No clue why this has to be done this way, Don't question it)
-	signal_map().connect([this] () {
-		get_style_context()->remove_class("locked");
-		Glib::signal_timeout().connect([this]() {
-			get_style_context()->add_class("locked");
-			return false;
-		}, 100);
-		// TODO: This is unstable, Sometimes it works sometimes it doesn't
-		// Figure out why it's like this somehow.
-		// Also for some reason this causes the window to show twice?
-		if (config_main["main"]["experimental"] == "true")
-			lock_session(this);
-	});
+	// signal_map().connect([this] () {
+	// 	get_style_context()->remove_class("locked");
+	// 	Glib::signal_timeout().connect([this]() {
+	// 		get_style_context()->add_class("locked");
+	// 		return false;
+	// 	}, 100);
+	// 	// TODO: This is unstable, Sometimes it works sometimes it doesn't
+	// 	// Figure out why it's like this somehow.
+	// 	// Also for some reason this causes the window to show twice?
+	// 	// if (config_main["main"]["experimental"] == "true")
+	// 	// 	lock_session(this);
+	// });
 
-	show_windows();
+	// Monitor connect/disconnect detection
+	// auto display = Gdk::Display::get_default();
+	// auto monitors = display->get_monitors();
+	// monitors->signal_items_changed().connect(
+	// 	[&](guint position, guint removed, guint added) {
+	// 		handle_windows();
+	// 	}
+	// );
+
+	handle_windows();
 	lock();
 }
 
@@ -237,61 +151,190 @@ void syslock::on_entry_changed() {
 	}
 }
 
-void syslock::setup_window(GtkWindow *window, GdkMonitor *monitor, const char* name) {
+void syslock::handle_windows() {
+	auto display = Gdk::Display::get_default();
+	auto monitor_list = display->get_monitors();
+	guint n_monitors = monitor_list->get_n_items();
+
+	std::string main_monitor = config_main["main"]["main-monitor"];
+	for (guint i = 0; i < n_monitors; ++i) {
+		GObject* raw = static_cast<GObject*>(g_list_model_get_item(monitor_list->gobj(), i));
+		auto monitor = GDK_MONITOR(raw);
+		const char* connector = gdk_monitor_get_connector(monitor);
+		Gtk::Window* window;
+
+		//std::printf("Monitor: %s, No: %d ", connector, i);
+		if (main_monitor == connector) {
+			//std::printf("is the primary monitor\n");
+			window = create_main_window(monitor);
+			primary_window = window;
+		}
+		else {
+			//std::printf("is a secondary monitor\n");
+			window = create_secondary_window(monitor);
+		}
+
+		if (config_main["main"]["start-unlocked"] != "true") {
+			window->show();
+			if (main_monitor == connector) {
+				window->get_style_context()->add_class("locked");
+				GdkRectangle geometry;
+				gdk_monitor_get_geometry(monitor, &geometry);
+				window_height = geometry.height;
+			}
+		}
+
+		g_object_unref(raw);
+	}
+}
+
+Gtk::Window* syslock::create_main_window(GdkMonitor* monitor) {
+	Gtk::Window* window = Gtk::make_managed<Gtk::Window>();
+	setup_window(window->gobj(), monitor, "syslock");
+	window->set_default_size(640, 480);
+	window->set_hide_on_close(true);
+
+	window->set_child(overlay);
+	overlay.set_child(box_lock_screen);
+	box_lock_screen.get_style_context()->add_class("lock_screen");
+	box_lock_screen.property_orientation().set_value(Gtk::Orientation::VERTICAL);
+
+	// TODO: Add a config option to select what appears on the lockscreen
+	box_lock_screen.append(label_time);
+	label_time.get_style_context()->add_class("time");
+
+	box_lock_screen.append(label_date);
+	label_date.get_style_context()->add_class("date");
+
+	Glib::signal_timeout().connect(sigc::mem_fun(*this, &syslock::update_time_date), 1000);
+	update_time_date();
+
+	overlay.add_overlay(box_layout);
+	box_layout.append(scrolled_window);
+	box_layout.get_style_context()->add_class("login_screen");
+	box_layout.property_orientation().set_value(Gtk::Orientation::VERTICAL);
+	box_layout.set_opacity(0);
+
+	scrolled_window.set_kinetic_scrolling(false);
+	scrolled_window.set_child(box_login_screen);
+	scrolled_window.set_policy(Gtk::PolicyType::EXTERNAL, Gtk::PolicyType::EXTERNAL);
+	scrolled_window.set_valign(Gtk::Align::END);
+
+	box_login_screen.property_orientation().set_value(Gtk::Orientation::HORIZONTAL);
+	box_login_screen.set_valign(Gtk::Align::CENTER);
+	box_login_screen.set_vexpand(true);
+	box_login_screen.append(box_widgets);
+
+	box_widgets.set_orientation(Gtk::Orientation::VERTICAL);
+	box_widgets.set_valign(Gtk::Align::CENTER);
+	box_widgets.set_hexpand(true);
+
+	// And add a way to enable/disable specific features (PFP, Username, Ect)
+	const std::string& home_dir = getenv("HOME");
+	if (profile_picture_path == "")
+		profile_picture_path = home_dir + "/.face";
+
+	if (std::filesystem::exists(profile_picture_path) && profile_scale > 0) {
+		box_widgets.append(image_profile);
+		image_profile.get_style_context()->add_class("image_profile");
+		auto pixbuf = Gdk::Pixbuf::create_from_file(profile_picture_path);
+		pixbuf = pixbuf->scale_simple(profile_scale, profile_scale, Gdk::InterpType::BILINEAR);
+
+		// Round the image
+		if (profile_rounding != 0)
+			pixbuf = create_rounded_pixbuf(pixbuf, profile_scale, profile_rounding);
+
+		image_profile.set_size_request(profile_scale, profile_scale);
+		image_profile.set(pixbuf);
+		image_profile.set_halign(Gtk::Align::CENTER);
+	}
+
+	box_widgets.append(label_username);
+	label_username.get_style_context()->add_class("label_username");
+	const uid_t& uid = geteuid();
+	struct passwd *pw = getpwuid(uid);
+	label_username.set_text((Glib::ustring)pw->pw_gecos);
+
+	box_widgets.append(entry_password);
+	entry_password.get_style_context()->add_class("entry_password");
+	entry_password.set_size_request(250, 30);
+	entry_password.set_halign(Gtk::Align::CENTER);
+	entry_password.set_visibility(false);
+	entry_password.set_input_purpose(Gtk::InputPurpose::PASSWORD);
+	entry_password.signal_activate().connect(sigc::mem_fun(*this, &syslock::auth_start));
+	entry_password.signal_changed().connect(sigc::mem_fun(*this, &syslock::on_entry_changed));
+	entry_password.grab_focus();
+	entry_password.signal_changed().connect([&]() {
+		if (entry_password.get_text() == "")
+			return;
+
+		scrolled_window.set_valign(Gtk::Align::FILL);
+		box_layout.set_opacity(1);
+		scrolled_window.set_size_request(-1, primary_window->get_height());
+		connection.disconnect();
+		connection = Glib::signal_timeout().connect([&]() {
+			lock();
+			return false;
+		}, 10 * 1000);
+	});
+
+	// TODO: add remaining tries left
+	box_widgets.append(label_error);
+	label_error.get_style_context()->add_class("label_error");
+	label_error.set_text("Incorrect password");
+	label_error.hide();
+
+	// Keypad
+	if (config_main["main"]["keypad"] == "true") {
+		keypad_main = Gtk::make_managed<keypad>(entry_password, sigc::mem_fun(*this, &syslock::auth_start));
+		box_login_screen.append(*keypad_main);
+		keypad_main->set_hexpand(true);
+		entry_password.set_input_purpose(Gtk::InputPurpose::PIN);
+	}
+
+
+
+	window->signal_show().connect([&, window]() {
+		Glib::signal_timeout().connect([&, window]() {
+			if (window->get_height() > window->get_width())
+				box_login_screen.set_orientation(Gtk::Orientation::VERTICAL);
+			else
+				box_login_screen.set_orientation(Gtk::Orientation::HORIZONTAL);
+			return false;
+		}, 500);
+	});
+
+	overlay.add_controller(gesture_drag);
+	windows.push_back(window);
+	return window;
+}
+
+Gtk::Window* syslock::create_secondary_window(GdkMonitor* monitor) {
+	Gtk::Window* window = Gtk::make_managed<Gtk::Window>();
+	setup_window(window->gobj(), monitor, "syslock-empty-window");
+	window->set_default_size(640, 480);
+	window->set_hide_on_close(true);
+
+	windows.push_back(window);
+	return window;
+}
+
+void syslock::setup_window(GtkWindow* window, GdkMonitor* monitor, const char* name) {
+	gtk_widget_set_name(GTK_WIDGET(window), name);
+
+	if (config_main["main"]["debug"] == "true")
+		return;
+
 	gtk_layer_init_for_window(window);
+	gtk_layer_set_namespace(window, name);
+	gtk_layer_set_monitor(window, monitor);
 	gtk_layer_set_layer(window, GTK_LAYER_SHELL_LAYER_OVERLAY);
-	gtk_layer_set_namespace(gobj(), name);
+	gtk_layer_set_keyboard_mode(window, GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
 	
 	gtk_layer_set_anchor(window, GTK_LAYER_SHELL_EDGE_LEFT, true);
 	gtk_layer_set_anchor(window, GTK_LAYER_SHELL_EDGE_RIGHT, true);
 	gtk_layer_set_anchor(window, GTK_LAYER_SHELL_EDGE_TOP, true);
 	gtk_layer_set_anchor(window, GTK_LAYER_SHELL_EDGE_BOTTOM, true);
-	gtk_layer_set_monitor(window, monitor);
-}
-
-void syslock::show_windows() {
-	GdkDisplay *display = gdk_display_get_default();
-	GListModel *monitors = gdk_display_get_monitors(display);
-
-	int main_monitor = std::stoi(config_main["main"]["main-monitor"]);
-	const int& monitorCount = g_list_model_get_n_items(monitors);
-
-	if (main_monitor < 0)
-		main_monitor = 0;
-	else if (main_monitor >= monitorCount)
-		main_monitor = monitorCount - 1;
-
-	// Set up layer shell
-	if (config_main["main"]["debug"] != "true") {
-		setup_window(gobj(), GDK_MONITOR(g_list_model_get_item(monitors, main_monitor)), "syslock");
-		gtk_layer_set_keyboard_mode(gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
-
-		// TODO: (VERY CRITICAL!!!)
-		// Add a way to detect when a monitor is connected/disconnected
-		for (int i = 0; i < monitorCount; ++i) {
-			GdkMonitor *monitor = GDK_MONITOR(g_list_model_get_item(monitors, i));
-
-			if (i == main_monitor) {
-				GdkRectangle geometry;
-				gdk_monitor_get_geometry(monitor, &geometry);
-				window_height = geometry.height;
-				continue;
-			}
-	
-			// Create empty windows
-			Gtk::Window *window = Gtk::make_managed<Gtk::Window>();
-			window->set_name("syslock-empty-window");
-			window->get_style_context()->add_class("locked");
-			windows.push_back(window);
-			setup_window(window->gobj(), monitor, "syslock-empty-window");
-
-			if (config_main["main"]["start-unlocked"] != "true")
-				window->show();
-		}
-	}
-
-	if (config_main["main"]["start-unlocked"] != "true")
-		show();
 }
 
 void syslock::on_drag_start(const double &x, const double &y) {
@@ -311,7 +354,7 @@ void syslock::on_drag_start(const double &x, const double &y) {
 	if (!gesture_drag->get_current_event()->get_pointer_emulated()) {
 		scrolled_window.set_valign(Gtk::Align::FILL);
 		box_layout.set_opacity(1);
-		scrolled_window.set_size_request(-1, get_height());
+		scrolled_window.set_size_request(-1, primary_window->get_height());
 		gesture_drag->reset();
 		return;
 	}
@@ -319,7 +362,7 @@ void syslock::on_drag_start(const double &x, const double &y) {
 	start_height = scrolled_window.get_height();
 	scrolled_window.set_valign(Gtk::Align::END);
 	if (start_height > 300) {
-		scrolled_window.set_size_request(-1, get_height());
+		scrolled_window.set_size_request(-1, primary_window->get_height());
 	}
 }
 
@@ -397,19 +440,6 @@ void syslock::lock() {
 	#endif
 
 	locked = true;
-}
-
-void syslock::snapshot_vfunc(const Glib::RefPtr<Gtk::Snapshot>& snapshot) {
-	Glib::signal_idle().connect([&]() {
-		if (get_height() > get_width())
-			box_login_screen.set_orientation(Gtk::Orientation::VERTICAL);
-		else
-			box_login_screen.set_orientation(Gtk::Orientation::HORIZONTAL);
-		return false;
-	});
-
-	// Render normally
-	Gtk::Window::snapshot_vfunc(snapshot);
 }
 
 extern "C" {
