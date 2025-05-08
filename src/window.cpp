@@ -164,7 +164,8 @@ void syslock::handle_windows() {
 		Gtk::Window* window;
 
 		//std::printf("Monitor: %s, No: %d ", connector, i);
-		if (main_monitor == connector) {
+		// TODO: Fix improper monitor names (Fallback to the first available monitor)
+		if (main_monitor == connector || (main_monitor == "" && i == 0)) {
 			//std::printf("is the primary monitor\n");
 			window = create_main_window(monitor);
 			primary_window = window;
