@@ -69,15 +69,16 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 	// });
 
 	// Monitor connect/disconnect detection
-	// auto display = Gdk::Display::get_default();
-	// auto monitors = display->get_monitors();
-	// monitors->signal_items_changed().connect(
-	// 	[&](guint position, guint removed, guint added) {
-	// 		handle_windows();
-	// 	}
-	// );
+	auto display = Gdk::Display::get_default();
+	auto monitors = display->get_monitors();
+	monitors->signal_items_changed().connect([this](guint position, guint removed, guint added) {
+		Glib::signal_timeout().connect([this, position, removed, added]() {
+			on_monitors_changed(position, removed, added);
+			return false;
+		}, 100);
+	}, true);
 
-	handle_windows();
+	handle_monitors_initial();
 	lock();
 }
 
@@ -151,7 +152,91 @@ void syslock::on_entry_changed() {
 	}
 }
 
-void syslock::handle_windows() {
+void syslock::on_monitors_changed(guint position, guint removed, guint added) {
+	// Get current monitors
+	auto display = Gdk::Display::get_default();
+	auto monitor_list = display->get_monitors();
+	guint n_monitors = monitor_list->get_n_items();
+
+	// Create a set of current monitor connectors
+	std::set<std::string> current_monitors;
+	for (guint i = 0; i < n_monitors; ++i) {
+		GObject* raw = static_cast<GObject*>(g_list_model_get_item(monitor_list->gobj(), i));
+		auto monitor = GDK_MONITOR(raw);
+		const char* connector = gdk_monitor_get_connector(monitor);
+		current_monitors.insert(connector);
+		g_object_unref(raw);
+	}
+
+	// Remove windows for disconnected monitors
+	std::vector<std::string> to_remove;
+	for (auto& pair : monitor_windows) {
+		if (current_monitors.find(pair.first) == current_monitors.end()) {
+			auto it = std::find(windows.begin(), windows.end(), pair.second);
+			if (it != windows.end())
+				windows.erase(it);
+
+			pair.second->hide();
+			delete pair.second;
+
+			to_remove.push_back(pair.first);
+		}
+	}
+
+	// Clean up the map
+	for (const auto& key : to_remove) {
+		monitor_windows.erase(key);
+	}
+
+	// Handle new monitors
+	for (guint i = 0; i < n_monitors; ++i) {
+		GObject* raw = static_cast<GObject*>(g_list_model_get_item(monitor_list->gobj(), i));
+		auto monitor = GDK_MONITOR(raw);
+		const char* connector = gdk_monitor_get_connector(monitor);
+		std::string conn_str(connector);
+
+		// If this monitor doesn't have a window yet, create one
+		if (monitor_windows.find(conn_str) == monitor_windows.end()) {			
+			Gtk::Window* window;
+			std::string main_monitor = config_main["main"]["main-monitor"];
+
+			if (main_monitor == conn_str || (main_monitor == "" && i == 0)) {
+				window = create_main_window(monitor);
+				primary_window = window;
+			}
+			else {
+				window = create_secondary_window(monitor);
+			}
+
+			monitor_windows[conn_str] = window;
+
+			if (locked) {
+				window->show();
+				window->get_style_context()->add_class("locked");
+
+				if (main_monitor == conn_str || (main_monitor == "" && i == 0)) {
+					GdkRectangle geometry;
+					gdk_monitor_get_geometry(monitor, &geometry);
+					window_height = geometry.height;
+				}
+			}
+			else if (config_main["main"]["start-unlocked"] != "true")
+				window->show();
+		}
+		
+		g_object_unref(raw);
+	}
+
+	if (primary_window == nullptr && !windows.empty()) {
+		primary_window = windows[0];
+	}
+
+	if (locked && primary_window != nullptr) {
+		entry_password.grab_focus();
+	}
+}
+
+void syslock::handle_monitors_initial() {
 	auto display = Gdk::Display::get_default();
 	auto monitor_list = display->get_monitors();
 	guint n_monitors = monitor_list->get_n_items();
@@ -161,23 +246,23 @@ void syslock::handle_windows() {
 		GObject* raw = static_cast<GObject*>(g_list_model_get_item(monitor_list->gobj(), i));
 		auto monitor = GDK_MONITOR(raw);
 		const char* connector = gdk_monitor_get_connector(monitor);
+		std::string conn_str(connector);
 		Gtk::Window* window;
-
-		//std::printf("Monitor: %s, No: %d ", connector, i);
+		
 		// TODO: Fix improper monitor names (Fallback to the first available monitor)
-		if (main_monitor == connector || (main_monitor == "" && i == 0)) {
-			//std::printf("is the primary monitor\n");
+		if (main_monitor == conn_str || (main_monitor == "" && i == 0)) {
 			window = create_main_window(monitor);
 			primary_window = window;
 		}
 		else {
-			//std::printf("is a secondary monitor\n");
 			window = create_secondary_window(monitor);
 		}
 
+		monitor_windows[conn_str] = window;
+
 		if (config_main["main"]["start-unlocked"] != "true") {
 			window->show();
-			if (main_monitor == connector) {
+			if (main_monitor == conn_str || (main_monitor == "" && i == 0)) {
 				window->get_style_context()->add_class("locked");
 				GdkRectangle geometry;
 				gdk_monitor_get_geometry(monitor, &geometry);
@@ -329,7 +414,7 @@ void syslock::setup_window(GtkWindow* window, GdkMonitor* monitor, const char* n
 	gtk_layer_init_for_window(window);
 	gtk_layer_set_namespace(window, name);
 	gtk_layer_set_monitor(window, monitor);
-	gtk_layer_set_layer(window, GTK_LAYER_SHELL_LAYER_OVERLAY);
+	gtk_layer_set_layer(window, GTK_LAYER_SHELL_LAYER_TOP);
 	gtk_layer_set_keyboard_mode(window, GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE);
 	
 	gtk_layer_set_anchor(window, GTK_LAYER_SHELL_EDGE_LEFT, true);
