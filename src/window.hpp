@@ -11,6 +11,8 @@
 #include <glibmm/dispatcher.h>
 #include <gdkmm/general.h>
 
+#include <set>
+
 #include "config.hpp"
 #include "config_parser.hpp"
 #include "keypad.hpp"
@@ -33,6 +35,7 @@ class syslock {
 		int start_height;
 		bool auth;
 		sigc::connection connection;
+		std::map<std::string, Gtk::Window*> monitor_windows;
 
 		#ifdef CONFIG_FILE
 		config_parser *config;
@@ -77,7 +80,8 @@ class syslock {
 		void auth_start();
 		void auth_end();
 		void on_entry_changed();
-		void handle_windows();
+		void handle_monitors_initial();
+		void on_monitors_changed(guint position, guint removed, guint added);
 		void setup_window(GtkWindow *window, GdkMonitor *monitor, const char* name);
 
 		void on_drag_start(const double &x, const double &y);
