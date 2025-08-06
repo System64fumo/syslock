@@ -1,7 +1,8 @@
 #pragma once
-#include "window.hpp"
+#include "config_parser.hpp"
 
-syslock *win;
+class syslock;
+syslock* win;
 
 typedef syslock* (*syslock_create_func)(const std::map<std::string, std::map<std::string, std::string>>&);
 typedef void (*syslock_lock_func)(syslock*);

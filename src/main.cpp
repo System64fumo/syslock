@@ -1,7 +1,6 @@
 #include "main.hpp"
-#include "window.hpp"
+#include "syslock.hpp"
 #include "config.hpp"
-#include "config_parser.hpp"
 #include "git_info.hpp"
 
 #include <gtkmm/application.h>

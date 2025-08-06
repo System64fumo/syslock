@@ -5,7 +5,7 @@ Syslock is a simple lockscreen for wayland written in gtkmm4<br>
 [![Packaging status](https://repology.org/badge/vertical-allrepos/syslock.svg)](https://repology.org/project/syslock/versions)
 
 > [!CAUTION]
-> This program does not use the ext session lock protocol. *Yet*<br>
+> This program does not use the ext session lock protocol by default. *Yet*<br>
 > Additional info at the bottom.<br>
 
 # Configuration
@@ -33,12 +33,7 @@ syslock uses your gtk4 theme by default, However it can be also load custom css,
 Just copy the included style.css file to ~/.config/sys64/lock/style.css<br>
 
 # Session lock
-Currently the session lock protocol is implemented but disabled by default due to instability and generally being broken.<br>
-Though if you are curious and wish to give it a try you can enable it by using the -e launch flag.<br>
-
-Things that will happen when the experimental session lock option is enabled:<br>
-* syslock will crash upon succesfully authenticating.<br>
-* The primary window gets mirrored to all displays.<br>
-* Touch inputs will not work.<br>
+Currently the session lock protocol is implemented but disabled by default due to it not working once you lock your screen again.<br>
+You can enable it by using the -e launch flag.<br>
 
 Help with this would be greatly appreciated.
