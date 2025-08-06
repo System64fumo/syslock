@@ -1,6 +1,6 @@
 BINS = syslock
 LIBS = libsyslock.so
-PKGS = gtkmm-4.0 gtk4-layer-shell-0 pam wayland-client
+PKGS = gtkmm-4.0 gtk4-layer-shell-0 pam
 SRCS = $(filter-out src/tap_to_wake.cpp, $(wildcard src/*.cpp))
 
 PREFIX ?= /usr/local
@@ -8,13 +8,6 @@ BINDIR ?= $(PREFIX)/bin
 LIBDIR ?= $(PREFIX)/lib
 DATADIR ?= $(PREFIX)/share
 BUILDDIR = build
-
-PROTOS = ext-session-lock-v1
-PROTO_DIR = /usr/share/wayland-protocols/staging/ext-session-lock
-
-PROTO_HDRS = $(addprefix src/, $(addsuffix .h, $(notdir $(PROTOS))))
-PROTO_SRCS = $(addprefix src/, $(addsuffix .c, $(notdir $(PROTOS))))
-PROTO_OBJS = $(PROTO_SRCS:.c=.o)
 
 # Features
 ifneq (, $(shell grep -E '^#define FEATURE_TAP_TO_WAKE' src/config.hpp))
@@ -32,7 +25,7 @@ CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
 LDFLAGS += $(shell pkg-config --libs $(PKGS))
 
 $(shell mkdir -p $(BUILDDIR))
-JOB_COUNT := $(BINS) $(LIBS) $(PROTO_HDRS) $(PROTO_SRCS) $(PROTO_OBJS) $(OBJS) src/git_info.hpp
+JOB_COUNT := $(BINS) $(LIBS) $(OBJS) src/git_info.hpp
 JOBS_DONE := $(shell ls -l $(JOB_COUNT) 2> /dev/null | wc -l)
 
 define progress
@@ -51,10 +44,7 @@ install: $(all)
 clean:
 	@echo "Cleaning up"
 	@rm -rf $(BUILDDIR) \
-		src/git_info.hpp \
-		$(PROTO_OBJS) \
-		$(PROTO_SRCS) \
-		$(PROTO_HDRS)
+		src/git_info.hpp
 
 $(BINS): src/git_info.hpp $(BUILDDIR)/main.o $(BUILDDIR)/config_parser.o
 	$(call progress, Linking $@)
@@ -64,11 +54,10 @@ $(BINS): src/git_info.hpp $(BUILDDIR)/main.o $(BUILDDIR)/config_parser.o
 	$(CXXFLAGS) \
 	$(shell pkg-config --libs gtkmm-4.0 gtk4-layer-shell-0)
 
-$(LIBS): $(PROTO_HDRS) $(PROTO_SRCS) $(PROTO_OBJS) $(OBJS)
+$(LIBS): $(OBJS)
 	$(call progress, Linking $@)
 	@$(CXX) -o $(BUILDDIR)/$(LIBS) \
 	$(filter-out $(BUILDDIR)/main.o, $(OBJS)) \
-	$(PROTO_OBJS) \
 	$(CXXFLAGS) \
 	$(LDFLAGS) \
 	-shared
@@ -80,14 +69,6 @@ $(BUILDDIR)/%.o: src/%.cpp
 $(BUILDDIR)/%.o: src/%.c
 	$(call progress, Compiling $@)
 	@$(CC) -c $< -o $@ $(CFLAGS)
-
-$(PROTO_HDRS): src/%.h : $(PROTO_DIR)/$(PROTOS).xml
-	$(call progress, Creating $@)
-	@wayland-scanner client-header $< src/$(notdir $(basename $<)).h
-
-$(PROTO_SRCS): src/%.c : $(PROTO_DIR)/$(PROTOS).xml
-	$(call progress, Creating $@)
-	@wayland-scanner public-code $< src/$(notdir $(basename $<)).c
 
 src/git_info.hpp:
 	$(call progress, Creating $@)
