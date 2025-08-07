@@ -77,11 +77,6 @@ void syslock::on_monitors_changed(guint position, guint removed, guint added) {
 	guint n_monitors = monitor_list->get_n_items();
 	const char *main_monitor = config_main["main"]["main-monitor"].c_str();
 
-	// TODO: Undo this?
-	// No clue
-	if (!windows.empty())
-		return;
-
 	for (guint i = 0; i < n_monitors; ++i) {
 		GObject* raw = static_cast<GObject*>(g_list_model_get_item(monitor_list->gobj(), i));
 		auto monitor = GDK_MONITOR(raw);
@@ -92,11 +87,13 @@ void syslock::on_monitors_changed(guint position, guint removed, guint added) {
 			window->dispatcher_auth.connect(sigc::mem_fun(*this, &syslock::unlock));
 			setup_window(window->gobj(), monitor, "syslock");
 			windows.push_back(window);
+			window->show();
 		}
 		else {
 			Gtk::Window* window = Gtk::make_managed<Gtk::Window>();
 			setup_window(window->gobj(), monitor, "syslock-empty-window");
 			windows.push_back(window);
+			window->show();
 		}
 	}
 }
@@ -144,10 +141,15 @@ void syslock::lock() {
 		}).detach();
 	}
 
-	on_monitors_changed(0, 0, 0);
-
 	for (auto window : windows)
 		window->show();
+
+	// TODO: Undo this?
+	// No clue
+	if (!windows.empty())
+		return;
+
+	on_monitors_changed(0, 0, 0);
 }
 
 void syslock::unlock() {
