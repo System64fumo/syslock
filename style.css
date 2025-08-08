@@ -2,6 +2,8 @@
 #syslock-empty-window {
 	background-color: rgba(0, 0, 0, 0.5);
 	background-image: url("/path/to/background.jpg");
+	background-repeat: no-repeat;
+	background-position: bottom left;
 }
 
 /* Lock screen */
@@ -38,4 +40,11 @@
 
 #syslock .label_error {
 	color: rgb(255,150,125);
+}
+
+/* Overlay */
+#syslock .box_overlay {
+	background-image: url("/path/to/background.png");
+	background-repeat: no-repeat;
+	background-position: bottom left;
 }

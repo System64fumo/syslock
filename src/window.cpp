@@ -40,6 +40,8 @@ syslock_window::syslock_window(std::map<std::string, std::map<std::string, std::
 
 	set_child(overlay);
 	overlay.set_child(box_lock_screen);
+	overlay.add_overlay(box_overlay);
+	box_overlay.get_style_context()->add_class("box_overlay");
 	overlay.add_overlay(box_layout);
 
 	gesture_drag = Gtk::GestureDrag::create();

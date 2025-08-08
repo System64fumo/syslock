@@ -43,6 +43,7 @@ class syslock_window : public Gtk::Window {
 		Gtk::Overlay overlay;
 		Gtk::Box box_lock_screen;
 		Gtk::Box box_login_screen;
+		Gtk::Box box_overlay;
 
 		Gtk::Box box_layout;
 		Gtk::Box box_widgets;
