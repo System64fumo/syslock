@@ -132,24 +132,26 @@ void syslock::lock() {
 		return;
 	locked = true;
 
-	if (config_main["main"]["experimental"] == "true")
-		gtk_session_lock_instance_lock(lock_instance);
+	Glib::signal_idle().connect_once([&]() {
+		if (config_main["main"]["experimental"] == "true")
+			gtk_session_lock_instance_lock(lock_instance);
 
-	if (lock_cmd != "") {
-		std::thread([this]() {
-			system(lock_cmd.c_str());
-		}).detach();
-	}
+		if (lock_cmd != "") {
+			std::thread([this]() {
+				system(lock_cmd.c_str());
+			}).detach();
+		}
 
-	for (auto window : windows)
-		window->show();
+		for (auto window : windows)
+			window->show();
 
-	// TODO: Undo this?
-	// No clue
-	if (!windows.empty())
-		return;
+		// TODO: Undo this?
+		// No clue
+		if (!windows.empty())
+			return;
 
-	on_monitors_changed(0, 0, 0);
+		on_monitors_changed(0, 0, 0);
+	});
 }
 
 void syslock::unlock() {
