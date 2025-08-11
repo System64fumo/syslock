@@ -140,11 +140,6 @@ syslock_window::syslock_window(std::map<std::string, std::map<std::string, std::
 	// Features
 	//
 
-	// Tap to wake
-	#ifdef FEATURE_TAP_TO_WAKE
-	listener = new tap_to_wake(*config);
-	#endif
-
 	// Keypad
 	#ifdef FEATURE_KEYPAD
 	if ((*config)["main"]["keypad"] == "true") {
@@ -219,18 +214,10 @@ void syslock_window::on_drag_stop(const double &x, const double &y) {
 	if (scrolled_window.get_height() > 300) {
 		scrolled_window.set_valign(Gtk::Align::FILL);
 		box_layout.set_opacity(1);
-		#ifdef FEATURE_TAP_TO_WAKE
-		if (listener->running)
-			listener->stop_listener();
-		#endif
 	}
 	else {
 		scrolled_window.set_valign(Gtk::Align::END);
 		box_layout.set_opacity(0);
-		#ifdef FEATURE_TAP_TO_WAKE
-		if (!listener->running)
-			listener->start_listener();
-		#endif
 	}
 	scrolled_window.set_size_request(-1, -1);
 }
@@ -240,11 +227,6 @@ void syslock_window::reset() {
 	box_layout.set_opacity(0);
 	scrolled_window.set_size_request(-1, -1);
 	entry_password.set_text("");
-
-	#ifdef FEATURE_TAP_TO_WAKE
-	if (!listener->running)
-		listener->start_listener();
-	#endif
 }
 
 bool syslock_window::update_time_date() {
@@ -284,6 +266,9 @@ void syslock_window::auth_start() {
 			entry_password.set_text("");
 			if (!authenticated)
 				label_error.show();
+			else
+				reset();
+				
 			entry_password.set_sensitive(true);
 			return false;
 		});
