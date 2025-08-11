@@ -154,20 +154,16 @@ syslock_window::syslock_window(std::map<std::string, std::map<std::string, std::
 		entry_password.set_input_purpose(Gtk::InputPurpose::PIN);
 	}
 	#endif
-
-	// TODO: Re enable this
-	// window->signal_show().connect([&, window]() {
-	// 	Glib::signal_timeout().connect([&, window]() {
-	// 		if (window->get_height() > window->get_width())
-	// 			box_login_screen.set_orientation(Gtk::Orientation::VERTICAL);
-	// 		else
-	// 			box_login_screen.set_orientation(Gtk::Orientation::HORIZONTAL);
-	// 		return false;
-	// 	}, 500);
-	// });
 }
 
 void syslock_window::on_drag_start(const double &x, const double &y) {
+	window_height = get_height();
+
+	if (window_height > get_width())
+		box_login_screen.set_orientation(Gtk::Orientation::VERTICAL);
+	else
+		box_login_screen.set_orientation(Gtk::Orientation::HORIZONTAL);
+
 	connection.disconnect();
 
 	// Block gesture inputs from the keypad

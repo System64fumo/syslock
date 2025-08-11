@@ -90,6 +90,9 @@ void syslock::on_monitors_changed(guint position, guint removed, guint added) {
 			window->show();
 		}
 		else {
+			if (config_main["main"]["debug"] == "true")
+				continue;
+
 			Gtk::Window* window = Gtk::make_managed<Gtk::Window>();
 			setup_window(window->gobj(), monitor, "syslock-empty-window");
 			windows.push_back(window);
@@ -102,7 +105,7 @@ void syslock::setup_window(GtkWindow* window, GdkMonitor* monitor, const char* n
 	gtk_widget_set_name(GTK_WIDGET(window), name);
 
 	if (config_main["main"]["debug"] == "true")
-		printf("Setup new window: %s started\n", name);
+		return;
 
 	if (config_main["main"]["experimental"] == "true") {
 		// TODO: Maybe this has to be called again on show?
@@ -122,9 +125,6 @@ void syslock::setup_window(GtkWindow* window, GdkMonitor* monitor, const char* n
 		gtk_layer_set_anchor(window, GTK_LAYER_SHELL_EDGE_TOP, true);
 		gtk_layer_set_anchor(window, GTK_LAYER_SHELL_EDGE_BOTTOM, true);
 	}
-
-	if (config_main["main"]["debug"] == "true")
-		printf("Setup new window: %s ended\n", name);
 }
 
 void syslock::lock() {
@@ -159,12 +159,13 @@ void syslock::unlock() {
 		gtk_session_lock_instance_unlock(lock_instance);
 
 	// TODO: Settle on something..
-	if (config_main["main"]["debug"] == "true") {
-		for (auto window : windows) window->destroy();
-	}
-	else {
-		for (auto window : windows) window->hide();
-	}
+	// if (config_main["main"]["debug"] == "true") {
+	// 	for (auto window : windows) window->destroy();
+	// }
+	// else {
+	// 	for (auto window : windows) window->hide();
+	// }
+	for (auto window : windows) window->hide();
 
 
 	locked = false;
@@ -174,8 +175,8 @@ void syslock::unlock() {
 		}).detach();
 	}
 
-	if (config_main["main"]["debug"] == "true")
-		windows.clear();
+	// if (config_main["main"]["debug"] == "true")
+	// 	windows.clear();
 }
 
 extern "C" {
