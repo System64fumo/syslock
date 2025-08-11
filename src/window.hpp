@@ -13,9 +13,6 @@
 
 #include "config.hpp"
 
-#ifdef FEATURE_TAP_TO_WAKE
-#include "tap_to_wake.hpp"
-#endif
 #ifdef FEATURE_KEYPAD
 #include "keypad.hpp"
 #endif
@@ -61,11 +58,6 @@ class syslock_window : public Gtk::Window {
 		Glib::RefPtr<Gtk::GestureDrag> gesture_drag;
 		sigc::connection connection;
 		std::thread thread_auth;
-
-		// Features
-		#ifdef FEATURE_TAP_TO_WAKE
-		tap_to_wake *listener;
-		#endif
 
 		#ifdef FEATURE_KEYPAD
 		keypad *keypad_main;

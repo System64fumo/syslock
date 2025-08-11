@@ -8,10 +8,13 @@ tap_to_wake::tap_to_wake(const std::map<std::string, std::map<std::string, std::
 	device_path = config_main["tap-to-wake"]["device-path"];
 	timeout = std::stoi(config_main["tap-to-wake"]["timeout"]);
 	tap_cmd = config_main["events"]["on-tap-cmd"];
+	running = false;
 }
 
 tap_to_wake::~tap_to_wake() {
 	stop_listener();
+	libevdev_free(dev);
+	close(fd);
 }
 
 void tap_to_wake::start_listener() {
@@ -89,8 +92,6 @@ void tap_to_wake::start_listener() {
 
 void tap_to_wake::stop_listener() {
 	thread_tap_listener.request_stop();
-	write(pipefd[1], "x", 1);
-	libevdev_free(dev);
-	close(fd);
 	running = false;
+	write(pipefd[1], "x", 1);
 }

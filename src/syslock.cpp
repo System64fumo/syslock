@@ -31,9 +31,6 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 		g_signal_connect(lock_instance, "unlocked", G_CALLBACK(on_unlocked), this);
 	}
 
-	if (config_main["main"]["start-unlocked"] != "true")
-		lock();
-
 	// Initialize
 	lock_cmd = config_main["events"]["on-lock-cmd"];
 	unlock_cmd = config_main["events"]["on-unlock-cmd"];
@@ -68,6 +65,13 @@ syslock::syslock(const std::map<std::string, std::map<std::string, std::string>>
 	// 		return false;
 	// 	}, 100);
 	// }, true);
+
+	#ifdef FEATURE_TAP_TO_WAKE
+	listener = new tap_to_wake(cfg);
+	#endif
+
+	if (config_main["main"]["start-unlocked"] != "true")
+		lock();
 }
 
 void syslock::on_monitors_changed(guint position, guint removed, guint added) {
@@ -128,6 +132,11 @@ void syslock::setup_window(GtkWindow* window, GdkMonitor* monitor, const char* n
 }
 
 void syslock::lock() {
+	#ifdef FEATURE_TAP_TO_WAKE
+	if (!listener->running)
+		listener->start_listener();
+	#endif
+
 	if (locked)
 		return;
 	locked = true;
@@ -177,6 +186,11 @@ void syslock::unlock() {
 
 	// if (config_main["main"]["debug"] == "true")
 	// 	windows.clear();
+
+	#ifdef FEATURE_TAP_TO_WAKE
+	if (listener->running)
+		listener->stop_listener();
+	#endif
 }
 
 extern "C" {
