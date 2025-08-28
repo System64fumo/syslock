@@ -16,7 +16,7 @@ class syslock {
 
 		void lock();
 		void unlock();
-		std::vector<Gtk::Window*> windows;
+		void monitor_changed(GdkMonitor *monitor);
 
 	private:
 		bool locked;

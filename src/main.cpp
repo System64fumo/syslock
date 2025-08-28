@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
 	// Read launch arguments
 	#ifdef CONFIG_RUNTIME
 	while (true) {
-		switch(getopt(argc, argv, "skl:dm:dedvh")) {
+		switch(getopt(argc, argv, "skl:dm:ddvh")) {
 			case 's':
 				config["main"]["start-unlocked"] = "true";
 				continue;
@@ -88,10 +88,6 @@ int main(int argc, char* argv[]) {
 
 			case 'm':
 				config["main"]["main-monitor"] = optarg;
-				continue;
-
-			case 'e':
-				config["main"]["experimental"] = "true";
 				continue;
 
 			case 'd':
@@ -112,7 +108,6 @@ int main(int argc, char* argv[]) {
 				std::printf("  -k	Enable the keypad\n");
 				std::printf("  -l	Set password length\n");
 				std::printf("  -m	Set primary monitor\n");
-				std::printf("  -e	Enable experimental session lock\n");
 				std::printf("  -d	Enable debug mode\n");
 				std::printf("  -v	Prints version info\n");
 				std::printf("  -h	Show this help message\n");
