@@ -36,7 +36,6 @@ syslock_window::syslock_window(std::map<std::string, std::map<std::string, std::
 	date_format = (*config)["clock"]["date-format"];
 
 	set_default_size(640, 480);
-	set_hide_on_close(true);
 
 	set_child(overlay);
 	overlay.set_child(box_lock_screen);
