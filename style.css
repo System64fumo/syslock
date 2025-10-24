@@ -3,7 +3,7 @@
 	background-color: rgba(0, 0, 0, 0.5);
 	background-image: url("/path/to/background.jpg");
 	background-repeat: no-repeat;
-	background-position: bottom left;
+	background-position: bottom center;
 }
 
 /* Lock screen */
@@ -46,5 +46,5 @@
 #syslock .box_overlay {
 	background-image: url("/path/to/background.png");
 	background-repeat: no-repeat;
-	background-position: bottom left;
+	background-position: bottom center;
 }

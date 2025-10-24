@@ -95,7 +95,7 @@ syslock_window::syslock_window(std::map<std::string, std::map<std::string, std::
 		if (profile_rounding != 0)
 			pixbuf = create_rounded_pixbuf(pixbuf, profile_scale, profile_rounding);
 
-		image_profile.set_size_request(profile_scale, profile_scale);
+		image_profile.set_pixel_size(profile_scale);
 		image_profile.set(pixbuf);
 		image_profile.set_halign(Gtk::Align::CENTER);
 	}
